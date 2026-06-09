@@ -1,0 +1,12 @@
+node_modules
+dist
+.env
+.DS_Store
+.tools
+.npm-cache
+.data
+server/src/uploads/*
+!server/src/uploads/.gitkeep
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

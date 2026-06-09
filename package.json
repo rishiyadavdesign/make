@@ -1,0 +1,21 @@
+{
+  "name": "bps-event-management-portal",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "setup": "npm install && npm run install:all",
+    "install:all": "npm install --prefix server && npm install --prefix client",
+    "dev:local": "./scripts/dev-local.sh",
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client -- --host 0.0.0.0\"",
+    "server": "npm run dev --prefix server",
+    "client": "npm run dev --prefix client",
+    "seed": "npm run seed --prefix server",
+    "build": "npm run build --prefix client"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

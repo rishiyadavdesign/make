@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: bps-event-management-api
+    env: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: PORT
+        value: 10000
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CLIENT_URLS
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_UPLOAD_PRESET
+        sync: false
+      - key: CLOUDINARY_FOLDER
+        value: bps-event-portal
