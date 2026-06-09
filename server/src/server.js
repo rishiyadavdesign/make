@@ -14,7 +14,14 @@ import { dashboardRouter, makeResourceRouter } from './routes/resourceRoutes.js'
 import userRoutes from './routes/userRoutes.js';
 
 dotenv.config();
-await connectDB();
+
+try {
+  await connectDB();
+} catch (err) {
+  console.error('Failed to connect to MongoDB during startup:', err);
+  // Exit so the host platform knows the service failed to start
+  process.exit(1);
+}
 
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -63,5 +70,17 @@ app.use('/api/dashboard', dashboardRouter);
 app.use(notFound);
 app.use(errorHandler);
 
-const port = process.env.PORT || 5001;
-app.listen(port, () => console.log(`BPS API running on ${port}`));
+const port = Number(process.env.PORT || 5001);
+const host = process.env.HOST || '0.0.0.0';
+
+const server = app.listen(port, host, () => console.log(`BPS API running on ${host}:${port}`));
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception thrown:', err);
+  // Let the process crash in production so the platform can restart it.
+  process.exit(1);
+});
