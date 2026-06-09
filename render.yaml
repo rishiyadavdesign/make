@@ -11,8 +11,6 @@ services:
         value: 20
       - key: JWT_EXPIRES_IN
         value: 7d
-      - key: PORT
-        value: 10000
       - key: NODE_ENV
         value: production
       - key: MONGO_URI
