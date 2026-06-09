@@ -124,7 +124,16 @@ VITE_API_URL=https://your-backend-domain.onrender.com/api
 
 ### Render Backend
 
-This repo includes `render.yaml`. On Render, create a Blueprint or a Web Service for `server/`:
+This repo includes `render.yaml`. On Render, create a Web Service for `server/` and set these env vars:
+
+- `NODE_VERSION=20`
+- `NODE_ENV=production`
+- `MONGO_URI` = your Atlas connection string
+- `JWT_SECRET` = secure random secret
+- `CLIENT_URLS` = comma-separated list of allowed frontend origins, e.g. `https://your-vercel-site.vercel.app`
+- optional Cloudinary env vars if using upload storage
+
+Render settings:
 
 - Build command: `npm install`
 - Start command: `npm start`
@@ -138,7 +147,17 @@ Deploy the `client/` folder:
 - Build command: `npm run build`
 - Output directory: `dist`
 
+Set this environment variable in Vercel:
+
+- `VITE_API_URL=https://your-render-backend.onrender.com/api`
+
 `client/vercel.json` is included so React Router routes refresh correctly.
+
+### Separate hosting notes
+
+- Backend on Render should expose only API routes.
+- Frontend on Vercel should call the Render API via `VITE_API_URL`.
+- `CLIENT_URLS` on the backend must include your Vercel domain so CORS succeeds.
 
 ### Seed Production Once
 
