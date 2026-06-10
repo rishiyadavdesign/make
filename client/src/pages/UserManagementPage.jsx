@@ -15,6 +15,13 @@ export default function UserManagementPage() {
   const [saving, setSaving] = useState(false);
   const load = () => api.get('/users').then((res) => setUsers(res.data));
   useEffect(() => { load(); }, []);
+  function upsertUser(user) {
+    setUsers((current) => {
+      const exists = current.some((item) => item._id === user._id);
+      if (exists) return current.map((item) => item._id === user._id ? { ...item, ...user } : item);
+      return [user, ...current];
+    });
+  }
   const filteredUsers = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return users.filter((u) => {
@@ -36,15 +43,16 @@ export default function UserManagementPage() {
     try {
       const { fullName, username, email, phone, password, accessCode, role, department, status } = payload;
       const cleanPayload = { fullName, username, email, phone, password, accessCode, role, department, status };
-      if (editing) await api.put(`/users/${editing._id}`, cleanPayload);
-      else await api.post('/users', cleanPayload);
+      const { data } = editing
+        ? await api.put(`/users/${editing._id}`, cleanPayload)
+        : await api.post('/users', cleanPayload);
+      upsertUser(data);
       setNotice({
         title: editing ? 'User updated' : 'User created',
         lines: [`Name: ${fullName}`, `Username: ${username}`, `Access code: ${accessCode}`]
       });
       setShowForm(false);
       setEditing(null);
-      load();
     } catch (err) {
       setError(err.response?.data?.message || 'Could not save user. Check all required fields and try again.');
     } finally {
@@ -52,13 +60,14 @@ export default function UserManagementPage() {
     }
   }
   async function setUserStatus(user, nextStatus) {
-    await api.put(`/users/${user._id}`, { ...user, status: nextStatus, assignedEvents: undefined });
-    load();
+    const { data } = await api.put(`/users/${user._id}`, { ...user, status: nextStatus, assignedEvents: undefined });
+    upsertUser(data);
   }
   async function resetPassword(user) {
     const password = window.prompt(`Temporary password for ${user.fullName}`, `${user.username}@123`);
     if (!password) return;
     const { data } = await api.patch(`/users/${user._id}/reset-password`, { password });
+    upsertUser({ ...user, isFirstLogin: true });
     setNotice({
       title: 'Password reset',
       lines: [
@@ -69,10 +78,10 @@ export default function UserManagementPage() {
         `Access code: ${user.accessCode}`
       ]
     });
-    load();
   }
   async function regenerateAccessCode(user) {
     const { data } = await api.patch(`/users/${user._id}/access-code`);
+    upsertUser({ ...user, accessCode: data.accessCode });
     setNotice({
       title: 'New access code generated',
       lines: [
@@ -82,18 +91,17 @@ export default function UserManagementPage() {
         `Access code: ${data.accessCode}`
       ]
     });
-    load();
   }
   async function disableUser(user) {
     if (!window.confirm(`Disable ${user.fullName}? They will not be able to log in.`)) return;
-    await api.delete(`/users/${user._id}`);
-    load();
+    const { data } = await api.delete(`/users/${user._id}`);
+    upsertUser(data);
   }
   async function removeUser(user) {
     if (!window.confirm(`Permanently remove ${user.fullName}? This removes the account from User Management.`)) return;
     await api.delete(`/users/${user._id}/remove`);
+    setUsers((current) => current.filter((item) => item._id !== user._id));
     setNotice({ title: 'User removed', lines: [`${user.fullName} was removed permanently.`] });
-    load();
   }
   return (
     <div className="space-y-5">
