@@ -13,6 +13,7 @@ const EventWorkspacePage = lazy(() => import('./pages/EventWorkspacePage.jsx'));
 const FirstLoginPage = lazy(() => import('./pages/FirstLoginPage.jsx'));
 const LoginPage = lazy(() => import('./pages/LoginPage.jsx'));
 const NotesPage = lazy(() => import('./pages/NotesPage.jsx'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage.jsx'));
 const UserManagementPage = lazy(() => import('./pages/UserManagementPage.jsx'));
 
 function PageLoader() {
@@ -43,6 +44,7 @@ export default function App() {
           <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/notes" element={<NotesPage />} />
           <Route path="/chat" element={<ChatPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/events" element={<EventSelectionPage />} />
           <Route path="/events/:id" element={<EventWorkspacePage />} />
           <Route path="/users" element={<Protected bossOnly><UserManagementPage /></Protected>} />

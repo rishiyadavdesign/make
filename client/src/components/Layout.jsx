@@ -1,4 +1,4 @@
-import { BarChart3, CalendarCheck, CalendarDays, LayoutDashboard, LogOut, Menu, MessageCircle, NotebookText, Pin, Users } from 'lucide-react';
+import { BarChart3, CalendarCheck, CalendarDays, LayoutDashboard, LogOut, Menu, MessageCircle, NotebookText, Pin, UserRound, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { api } from '../api/client.js';
@@ -13,7 +13,8 @@ function links(user) {
     { to: '/events', label: 'Events', icon: CalendarDays },
     { to: '/calendar', label: 'Calendar', icon: CalendarCheck },
     { to: '/notes', label: 'Notes', icon: NotebookText },
-    { to: '/chat', label: 'Chat', icon: MessageCircle }
+    { to: '/chat', label: 'Chat', icon: MessageCircle },
+    { to: '/profile', label: 'Profile', icon: UserRound }
   ];
   if (isBoss(user)) {
     base.push({ to: '/users', label: 'Users', icon: Users }, { to: '/monitoring', label: 'Monitoring', icon: BarChart3 });
@@ -40,13 +41,13 @@ export default function Layout() {
           <h1 className="text-lg font-bold leading-5">BPS Event Portal</h1>
           <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Event Management Portal</p>
         </Link>
-        <div className="mt-3 flex items-center justify-between gap-2">
-          <div>
+        <Link to="/profile" onClick={() => setOpen(false)} className="mt-3 flex items-center justify-between gap-2 rounded-lg p-2 hover:bg-slate-50">
+          <div className="min-w-0">
             <p className="text-sm font-semibold leading-5">{user.fullName}</p>
             <p className="text-xs text-slate-500">{user.department || 'BPS Team'}</p>
           </div>
           <RoleBadge role={user.role} />
-        </div>
+        </Link>
       </div>
       <nav className="space-y-1">
         {links(user).map(({ to, label, icon: Icon }) => (
@@ -86,7 +87,7 @@ export default function Layout() {
       </main>
       <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur lg:hidden">
         <div className="grid grid-cols-5 gap-1">
-          {links(user).slice(0, 5).map(({ to, label, icon: Icon }) => (
+          {links(user).filter((item) => ['Dashboard', 'Events', 'Calendar', 'Chat', 'Profile'].includes(item.label)).map(({ to, label, icon: Icon }) => (
             <NavLink key={to} to={to} className={({ isActive }) => `flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg text-[11px] font-semibold ${isActive ? 'bg-green-50 text-brand' : 'text-slate-500'}`}>
               <Icon size={19} />
               <span className="max-w-full truncate">{label}</span>

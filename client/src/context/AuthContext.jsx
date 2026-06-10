@@ -40,12 +40,23 @@ export function AuthProvider({ children }) {
     return data.user;
   }
 
+  async function updateProfile(payload) {
+    const { data } = await api.put('/auth/profile', payload);
+    setUser(data);
+    return data;
+  }
+
+  async function changePassword(payload) {
+    const { data } = await api.put('/auth/password', payload);
+    return data;
+  }
+
   function logout() {
     localStorage.removeItem('bpsToken');
     setUser(null);
   }
 
-  const value = useMemo(() => ({ user, loading, login, accessCodeLogin, logout, completeFirstLogin }), [user, loading]);
+  const value = useMemo(() => ({ user, loading, login, accessCodeLogin, logout, completeFirstLogin, updateProfile, changePassword }), [user, loading]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

@@ -35,7 +35,40 @@ export const accessCodeLogin = asyncHandler(async (req, res) => {
 });
 
 export const me = asyncHandler(async (req, res) => {
-  res.json(req.user);
+  const user = await User.findById(req.user._id).select('-password').populate('assignedEvents', 'eventName date venue status');
+  res.json(user);
+});
+
+export const updateProfile = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  if (!user) return res.status(404).json({ message: 'User not found' });
+
+  const allowed = ['fullName', 'phone', 'department'];
+  allowed.forEach((field) => {
+    if (req.body[field] !== undefined) user[field] = req.body[field];
+  });
+  user.profileCompleted = Boolean(user.fullName);
+  await user.save();
+
+  const fresh = await User.findById(user._id).select('-password').populate('assignedEvents', 'eventName date venue status');
+  res.json(fresh);
+});
+
+export const changePassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword || newPassword.length < 6) {
+    return res.status(400).json({ message: 'Current password and a new password of at least 6 characters are required' });
+  }
+
+  const user = await User.findById(req.user._id).select('+password');
+  if (!user || !(await user.comparePassword(currentPassword))) {
+    return res.status(401).json({ message: 'Current password is incorrect' });
+  }
+
+  user.password = newPassword;
+  user.isFirstLogin = false;
+  await user.save();
+  res.json({ message: 'Password updated' });
 });
 
 export const completeFirstLogin = asyncHandler(async (req, res) => {
