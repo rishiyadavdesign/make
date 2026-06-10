@@ -25,9 +25,9 @@ const statusClass = {
 };
 
 export function RoleBadge({ role }) {
-  return <span className={`rounded-full px-2 py-1 text-xs font-semibold ${roleClass[role] || 'bg-slate-100 text-slate-700'}`}>{role}</span>;
+  return <span className={`inline-flex w-fit max-w-full items-center whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold leading-4 ${roleClass[role] || 'bg-slate-100 text-slate-700'}`}>{role}</span>;
 }
 
 export function StatusBadge({ status }) {
-  return <span className={`rounded-full px-2 py-1 text-xs font-semibold ${statusClass[status] || 'bg-slate-100 text-slate-700'}`}>{status}</span>;
+  return <span className={`inline-flex w-fit max-w-full items-center whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold leading-4 ${statusClass[status] || 'bg-slate-100 text-slate-700'}`}>{status}</span>;
 }

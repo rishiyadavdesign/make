@@ -131,12 +131,16 @@ export default function EventWorkspacePage() {
             <h2 className="break-words text-[1.35rem] font-bold leading-tight text-slate-950 sm:text-2xl">{event.eventName}</h2>
             <p className="mt-1 break-words text-sm leading-5 text-slate-500">{event.clientName} - {event.venue}</p>
           </div>
-          <div className="grid grid-cols-2 gap-2 lg:flex lg:flex-wrap lg:justify-end">
-            <StatusBadge status={event.status} />
-            {event.isPinnedForMe && <StatusBadge status="Pinned" />}
-            {canPin && <button onClick={pinEvent} className="secondary-btn min-h-11"><Pin size={16} /> {event.isPinnedForMe ? 'Unpin' : 'Pin main'}</button>}
-            {canManage && <button onClick={() => setEditingEvent(!editingEvent)} className="secondary-btn">Edit</button>}
-            {isBoss(user) && <button onClick={deleteEvent} className="inline-flex min-h-10 items-center justify-center rounded-lg bg-rose-600 px-3 py-2 text-sm font-semibold text-white">Delete</button>}
+          <div className="space-y-2 lg:flex lg:flex-wrap lg:items-center lg:justify-end lg:gap-2 lg:space-y-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <StatusBadge status={event.status} />
+              {event.isPinnedForMe && <StatusBadge status="Pinned" />}
+            </div>
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+              {canPin && <button onClick={pinEvent} className="secondary-btn min-h-11"><Pin size={16} /> {event.isPinnedForMe ? 'Unpin' : 'Pin main'}</button>}
+              {canManage && <button onClick={() => setEditingEvent(!editingEvent)} className="secondary-btn">Edit</button>}
+              {isBoss(user) && <button onClick={deleteEvent} className="inline-flex min-h-10 items-center justify-center rounded-lg bg-rose-600 px-3 py-2 text-sm font-semibold text-white">Delete</button>}
+            </div>
           </div>
         </div>
         <div className="hide-scrollbar -mx-3 mt-4 flex snap-x gap-2 overflow-x-auto px-3 pb-1 sm:mx-0 sm:px-0">
