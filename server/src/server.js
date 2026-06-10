@@ -8,6 +8,7 @@ import { fileURLToPath } from 'url';
 import { connectDB } from './config/db.js';
 import { errorHandler, notFound } from './middleware/error.js';
 import { uploadStorageMode } from './utils/fileStorage.js';
+import appNoteRoutes from './routes/appNoteRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import eventRoutes from './routes/eventRoutes.js';
 import messageRoutes from './routes/messageRoutes.js';
@@ -58,6 +59,7 @@ app.get('/api/config', (_req, res) => res.json({ uploadStorage: uploadStorageMod
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/events', eventRoutes);
+app.use('/api/app-notes', appNoteRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/tasks', makeResourceRouter('tasks'));
 app.use('/api/equipment', makeResourceRouter('equipment'));

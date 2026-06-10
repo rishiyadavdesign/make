@@ -14,6 +14,7 @@ api.interceptors.request.use((config) => {
 export const endpoints = {
   users: '/users',
   events: '/events',
+  appNotes: '/app-notes',
   tasks: '/tasks',
   equipment: '/equipment',
   responsibilities: '/responsibilities',

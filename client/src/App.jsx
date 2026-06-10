@@ -8,6 +8,7 @@ import EventSelectionPage from './pages/EventSelectionPage.jsx';
 import EventWorkspacePage from './pages/EventWorkspacePage.jsx';
 import FirstLoginPage from './pages/FirstLoginPage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
+import NotesPage from './pages/NotesPage.jsx';
 import UserManagementPage from './pages/UserManagementPage.jsx';
 import { isBoss } from './utils/roles.js';
 
@@ -31,6 +32,7 @@ export default function App() {
       <Route path="/first-login" element={<Protected><FirstLoginPage /></Protected>} />
       <Route element={<Protected><Layout /></Protected>}>
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/notes" element={<NotesPage />} />
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/events" element={<EventSelectionPage />} />
         <Route path="/events/:id" element={<EventWorkspacePage />} />

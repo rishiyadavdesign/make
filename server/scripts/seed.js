@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import AppNote from '../src/models/AppNote.js';
 import Checklist from '../src/models/Checklist.js';
 import Equipment from '../src/models/Equipment.js';
 import Expense from '../src/models/Expense.js';
@@ -17,6 +18,7 @@ dotenv.config();
 await mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/bps_event_portal');
 
 await Promise.all([
+  AppNote.deleteMany({}),
   User.deleteMany({}),
   Event.deleteMany({}),
   Task.deleteMany({}),
@@ -246,6 +248,30 @@ await Message.create([
     sender: team._id,
     recipient: boss._id,
     body: 'I will update task status and equipment status from the event workspace.'
+  }
+]);
+
+await AppNote.create([
+  {
+    title: 'Daily team standup points',
+    description: 'Check assigned events, urgent tasks, equipment readiness, and expense approvals every morning.',
+    category: 'Meeting',
+    visibility: 'Shared',
+    createdBy: boss._id
+  },
+  {
+    title: 'Vendor follow-up list',
+    description: 'Call stage, barricading, branding, and transport vendors before 5 PM.',
+    category: 'Reminder',
+    visibility: 'Personal',
+    createdBy: manager._id
+  },
+  {
+    title: 'Packing ideas',
+    description: 'Keep spare batteries, tape, markers, extension boards, and rain cover in the event kit.',
+    category: 'Idea',
+    visibility: 'Shared',
+    createdBy: team._id
   }
 ]);
 
