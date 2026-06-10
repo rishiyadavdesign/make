@@ -28,12 +28,12 @@ export default function EventSelectionPage() {
   }
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div><h2 className="text-2xl font-bold">Select Event</h2><p className="text-sm text-slate-500">Open an event workspace to manage delivery.</p></div>
-        {isBoss(user) && <button onClick={() => setShowForm(!showForm)} className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white">New event</button>}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div><h2 className="page-title">Select Event</h2><p className="page-subtitle">Open an event workspace to manage delivery.</p></div>
+        {isBoss(user) && <button onClick={() => setShowForm(!showForm)} className="primary-btn sm:min-w-32">New event</button>}
       </div>
       {showForm && <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"><EventForm users={users} onSubmit={createEvent} /></div>}
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">{events.map((event) => <EventCard key={event._id} event={event} onPin={pinEvent} canPin={canPin} />)}</div>
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">{events.map((event) => <EventCard key={event._id} event={event} onPin={pinEvent} canPin={canPin} />)}</div>
     </div>
   );
 }

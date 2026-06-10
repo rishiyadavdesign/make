@@ -21,7 +21,7 @@ export default function NotificationPanel() {
         {items.some((item) => !item.isRead) && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-rose-500" />}
       </button>
       {open && (
-        <div className="absolute right-0 mt-2 w-80 rounded-lg border border-slate-200 bg-white p-3 shadow-lg">
+        <div className="fixed left-3 right-3 top-14 z-40 rounded-lg border border-slate-200 bg-white p-3 shadow-lg sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-80">
           <h3 className="mb-2 text-sm font-semibold">Notifications</h3>
           <div className="space-y-2">
             {items.length === 0 && <p className="text-sm text-slate-500">No notifications</p>}

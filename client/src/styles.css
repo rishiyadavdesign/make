@@ -6,14 +6,54 @@ body {
   margin: 0;
   background: #f5f7f5;
   color: #101714;
+  -webkit-font-smoothing: antialiased;
 }
 
 input,
 select,
 textarea {
-  @apply w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-green-100;
+  @apply w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-green-100;
 }
 
 button {
   @apply transition;
+}
+
+@layer components {
+  .page-title {
+    @apply text-xl font-bold tracking-normal text-slate-950 sm:text-2xl;
+  }
+
+  .page-subtitle {
+    @apply mt-1 text-sm leading-5 text-slate-500;
+  }
+
+  .surface {
+    @apply rounded-lg border border-slate-200 bg-white shadow-sm;
+  }
+
+  .primary-btn {
+    @apply inline-flex min-h-11 items-center justify-center rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-700;
+  }
+
+  .secondary-btn {
+    @apply inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50;
+  }
+
+  .mobile-action-grid {
+    @apply grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center;
+  }
+
+  .mobile-action-grid > button,
+  .mobile-action-grid > a {
+    @apply w-full sm:w-auto;
+  }
+
+  .hide-scrollbar {
+    scrollbar-width: none;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }

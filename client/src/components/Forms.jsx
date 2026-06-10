@@ -4,7 +4,7 @@ const roles = ['Boss/Admin', 'Project Manager', 'Team Member'];
 const priorities = ['Low', 'Medium', 'High', 'Urgent'];
 
 function Field({ label, children }) {
-  return <label className="space-y-1 text-sm font-medium text-slate-700"><span>{label}</span>{children}</label>;
+  return <label className="space-y-1.5 text-sm font-medium text-slate-700"><span>{label}</span>{children}</label>;
 }
 
 export function UserForm({ onSubmit, initial = {} }) {
@@ -20,7 +20,7 @@ export function UserForm({ onSubmit, initial = {} }) {
       <Field label="Access code"><input value={form.accessCode} onChange={set('accessCode')} required /></Field>
       <Field label="Role"><select value={form.role} onChange={set('role')}>{roles.map((r) => <option key={r}>{r}</option>)}</select></Field>
       <Field label="Department"><input value={form.department} onChange={set('department')} /></Field>
-      <button className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white md:col-span-2">Save user</button>
+      <button className="primary-btn md:col-span-2">Save user</button>
     </form>
   );
 }
@@ -42,7 +42,7 @@ export function EventForm({ onSubmit, users = [], initial = {} }) {
       <Field label="Team members"><select multiple value={form.teamMembers} onChange={(e) => setForm({ ...form, teamMembers: [...e.target.selectedOptions].map((o) => o.value) })}>{members.map((u) => <option key={u._id} value={u._id}>{u.fullName}</option>)}</select></Field>
       <Field label="Description"><textarea value={form.description} onChange={set('description')} /></Field>
       <Field label="Instructions"><textarea value={form.importantInstructions} onChange={set('importantInstructions')} /></Field>
-      <button className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white md:col-span-2">Save event</button>
+      <button className="primary-btn md:col-span-2">Save event</button>
     </form>
   );
 }
@@ -51,7 +51,7 @@ export function TaskForm({ eventId, users, onSubmit }) {
   const [form, setForm] = useState({ eventId, title: '', assignedTo: '', priority: 'Medium', deadline: '', description: '', deliverables: '', referenceLinks: '', approvalCriteria: '', files: [] });
   const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onSubmit(form); setForm({ ...form, title: '', description: '', deliverables: '', referenceLinks: '', approvalCriteria: '', files: [] }); e.currentTarget.reset(); }} className="grid gap-3 rounded-lg border border-slate-200 bg-white p-4 md:grid-cols-2">
+    <form onSubmit={(e) => { e.preventDefault(); onSubmit(form); setForm({ ...form, title: '', description: '', deliverables: '', referenceLinks: '', approvalCriteria: '', files: [] }); e.currentTarget.reset(); }} className="grid gap-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm md:grid-cols-2 md:p-4">
       <Field label="Task title"><input value={form.title} onChange={set('title')} required /></Field>
       <Field label="Assign to"><select value={form.assignedTo} onChange={set('assignedTo')} required><option value="">Select</option>{users.map((u) => <option key={u._id} value={u._id}>{u.fullName}</option>)}</select></Field>
       <Field label="Priority"><select value={form.priority} onChange={set('priority')}>{priorities.map((p) => <option key={p}>{p}</option>)}</select></Field>
@@ -61,7 +61,7 @@ export function TaskForm({ eventId, users, onSubmit }) {
       <Field label="Description"><textarea value={form.description} onChange={set('description')} /></Field>
       <Field label="Approval criteria"><textarea value={form.approvalCriteria} onChange={set('approvalCriteria')} /></Field>
       <Field label="Attachments"><input type="file" multiple onChange={(e) => setForm({ ...form, files: [...e.target.files] })} /></Field>
-      <button className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white md:col-span-2">Create task</button>
+      <button className="primary-btn md:col-span-2">Create task</button>
     </form>
   );
 }
@@ -70,13 +70,13 @@ export function EquipmentForm({ eventId, users, onSubmit }) {
   const [form, setForm] = useState({ eventId, name: '', quantity: 1, responsiblePerson: '', status: 'Required', notes: '' });
   const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onSubmit(form); }} className="grid gap-3 rounded-lg border border-slate-200 bg-white p-4 md:grid-cols-2">
+    <form onSubmit={(e) => { e.preventDefault(); onSubmit(form); }} className="grid gap-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm md:grid-cols-2 md:p-4">
       <Field label="Equipment"><input value={form.name} onChange={set('name')} required /></Field>
       <Field label="Quantity"><input type="number" min="1" value={form.quantity} onChange={set('quantity')} /></Field>
       <Field label="Responsible person"><select value={form.responsiblePerson} onChange={set('responsiblePerson')} required><option value="">Select</option>{users.map((u) => <option key={u._id} value={u._id}>{u.fullName}</option>)}</select></Field>
       <Field label="Status"><select value={form.status} onChange={set('status')}>{['Required', 'Assigned', 'Packed', 'Brought to Event', 'Missing', 'Returned'].map((s) => <option key={s}>{s}</option>)}</select></Field>
       <Field label="Notes"><textarea value={form.notes} onChange={set('notes')} /></Field>
-      <button className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white md:col-span-2">Save equipment</button>
+      <button className="primary-btn md:col-span-2">Save equipment</button>
     </form>
   );
 }
