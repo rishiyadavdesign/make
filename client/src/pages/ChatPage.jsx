@@ -1,4 +1,4 @@
-import { MessageCircle, Search, SendHorizonal, UsersRound } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Search, SendHorizonal, UsersRound } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../api/client.js';
 import { RoleBadge } from '../components/Badges.jsx';
@@ -15,6 +15,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState([]);
   const [body, setBody] = useState('');
   const [query, setQuery] = useState('');
+  const [mobileConversationOpen, setMobileConversationOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const scroller = useRef(null);
   const activeContact = useMemo(() => contacts.find((contact) => contact._id === activeId), [contacts, activeId]);
@@ -72,8 +73,8 @@ export default function ChatPage() {
         <p className="page-subtitle">Message Boss/Admin, managers, and members connected to your events.</p>
       </div>
 
-      <div className="grid h-[calc(100dvh-12.5rem)] min-h-[560px] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm lg:h-[72vh] lg:grid-cols-[320px_1fr]">
-        <aside className="border-b border-slate-200 bg-slate-50 lg:border-b-0 lg:border-r">
+      <div className="grid h-[calc(100dvh-13.5rem)] min-h-[500px] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm lg:h-[72vh] lg:min-h-[560px] lg:grid-cols-[320px_1fr]">
+        <aside className={`${mobileConversationOpen ? 'hidden' : 'flex'} min-h-0 flex-col bg-slate-50 lg:flex lg:border-r`}>
           <div className="border-b border-slate-200 bg-white p-3">
             <div className="mb-3 flex items-center gap-2">
               <UsersRound size={18} className="text-brand" />
@@ -89,15 +90,18 @@ export default function ChatPage() {
               <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search people" className="min-h-10 rounded-lg bg-slate-50 pl-9 text-sm" />
             </label>
           </div>
-          <div className="hide-scrollbar flex gap-2 overflow-x-auto p-3 lg:block lg:max-h-[calc(72vh-96px)] lg:space-y-2 lg:overflow-y-auto">
+          <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
             {loading && <p className="p-3 text-sm text-slate-500">Loading contacts...</p>}
             {!loading && contacts.length === 0 && <p className="p-3 text-sm text-slate-500">No chat contacts available.</p>}
             {!loading && contacts.length > 0 && filteredContacts.length === 0 && <p className="p-3 text-sm text-slate-500">No people found.</p>}
             {filteredContacts.map((contact) => (
               <button
                 key={contact._id}
-                onClick={() => setActiveId(contact._id)}
-                className={`min-w-56 rounded-lg border p-3 text-left lg:w-full ${activeId === contact._id ? 'border-brand bg-green-50 ring-2 ring-green-100' : 'border-slate-200 bg-white hover:bg-slate-50'}`}
+                onClick={() => {
+                  setActiveId(contact._id);
+                  setMobileConversationOpen(true);
+                }}
+                className={`w-full rounded-lg border p-3 text-left ${activeId === contact._id ? 'border-brand bg-green-50 ring-2 ring-green-100' : 'border-slate-200 bg-white hover:bg-slate-50'}`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-3">
@@ -115,10 +119,13 @@ export default function ChatPage() {
           </div>
         </aside>
 
-        <section className="flex min-h-0 flex-col">
+        <section className={`${mobileConversationOpen ? 'flex' : 'hidden'} min-h-0 flex-col lg:flex`}>
           <div className="sticky top-0 z-10 flex min-h-16 items-center justify-between gap-3 border-b border-slate-200 bg-white/95 p-3 backdrop-blur">
             {activeContact ? (
-              <div className="flex min-w-0 items-center gap-3">
+              <div className="flex min-w-0 items-center gap-2">
+                <button type="button" onClick={() => setMobileConversationOpen(false)} className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 lg:hidden" aria-label="Back to contacts">
+                  <ArrowLeft size={20} />
+                </button>
                 <Avatar name={activeContact.fullName} />
                 <div className="min-w-0">
                   <p className="truncate font-semibold text-slate-900">{activeContact.fullName}</p>
