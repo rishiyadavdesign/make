@@ -9,6 +9,7 @@ const emptyPlan = { title: '', description: '', date: '', startTime: '', endTime
 const categories = ['Task', 'Meeting', 'Reminder', 'Travel', 'Follow Up', 'Personal'];
 const statuses = ['Planned', 'In Progress', 'Done', 'Cancelled'];
 const visibilities = ['Personal', 'Shared'];
+const weekdays = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 
 function monthValue(date = new Date()) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
@@ -55,6 +56,17 @@ export default function CalendarPage() {
       return `${year}-${String(value).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     });
   }, [month]);
+
+  const calendarCells = useMemo(() => {
+    const [year, value] = month.split('-').map(Number);
+    const firstDay = new Date(year, value - 1, 1);
+    const mondayOffset = (firstDay.getDay() + 6) % 7;
+    const blanks = Array.from({ length: mondayOffset }, (_, index) => ({ key: `blank-start-${index}`, date: null }));
+    const activeDays = days.map((date) => ({ key: date, date }));
+    const total = blanks.length + activeDays.length;
+    const endBlanks = Array.from({ length: (7 - (total % 7)) % 7 }, (_, index) => ({ key: `blank-end-${index}`, date: null }));
+    return [...blanks, ...activeDays, ...endBlanks];
+  }, [days, month]);
 
   function resetForm() {
     setEditing(null);
@@ -132,7 +144,48 @@ export default function CalendarPage() {
         </div>
       </form>
 
-      <div className="grid gap-3 xl:grid-cols-2">
+      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div className="min-w-[58rem]">
+          <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50">
+            {weekdays.map((day) => <div key={day} className="px-3 py-2 text-[11px] font-bold text-slate-500">{day}</div>)}
+          </div>
+          <div className="grid grid-cols-7">
+            {calendarCells.map((cell) => {
+              const dayPlans = cell.date ? grouped[cell.date] || [] : [];
+              const isToday = cell.date === new Date().toISOString().slice(0, 10);
+              const isSelected = cell.date === form.date;
+              if (!cell.date) return <div key={cell.key} className="min-h-32 border-b border-r border-slate-100 bg-slate-50/60" />;
+              const dateObj = new Date(cell.date);
+              const dayNumber = dateObj.getDate();
+              return (
+                <button
+                  key={cell.key}
+                  type="button"
+                  onClick={() => setForm({ ...form, date: cell.date })}
+                  className={`min-h-32 border-b border-r border-slate-100 p-2 text-left align-top hover:bg-green-50/40 ${isSelected ? 'outline outline-2 -outline-offset-2 outline-brand' : ''}`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={`text-sm font-bold ${isToday ? 'inline-flex h-7 w-7 items-center justify-center rounded-full bg-brand text-white' : 'text-slate-700'}`}>{dayNumber}</span>
+                    {dayPlans.length > 0 && <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">{dayPlans.length}</span>}
+                  </div>
+                  <div className="mt-2 space-y-1">
+                    {dayPlans.slice(0, 3).map((plan) => (
+                      <div key={plan._id} className={`rounded-md px-2 py-1 text-[11px] font-semibold leading-4 ${plan.status === 'Done' ? 'bg-green-100 text-green-800' : plan.status === 'Cancelled' ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-700'}`}>
+                        <p className="truncate">{plan.startTime ? `${plan.startTime} ` : ''}{plan.title}</p>
+                      </div>
+                    ))}
+                    {dayPlans.length > 3 && <p className="text-[11px] font-semibold text-slate-500">+{dayPlans.length - 3} more</p>}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="mb-3 text-sm font-bold uppercase tracking-normal text-slate-500">Plan details</h3>
+        <div className="grid gap-3 xl:grid-cols-2">
         {days.map((day) => {
           const dayPlans = grouped[day] || [];
           if (!dayPlans.length) return null;
@@ -177,6 +230,7 @@ export default function CalendarPage() {
             </section>
           );
         })}
+        </div>
       </div>
       {plans.length === 0 && <p className="rounded-lg border border-dashed border-slate-200 bg-white p-4 text-sm text-slate-500">No plans for this month yet.</p>}
     </div>
