@@ -24,12 +24,10 @@ export default function LoginPage() {
   return (
     <div className="grid min-h-screen place-items-center bg-slate-100 px-4">
       <form onSubmit={submit} className="w-full max-w-md rounded-lg bg-white p-6 shadow-sm">
-        <div className="flex items-center gap-3">
-          <img src="/bps-logo.svg" alt="Black Pepper Salt" className="h-16 w-16 rounded-lg bg-black object-cover" />
-          <div>
-            <h1 className="text-2xl font-bold leading-7">BPS Event Management Portal</h1>
-            <p className="mt-1 text-sm text-slate-500">Use credentials or access code provided by Boss/Admin.</p>
-          </div>
+        <div>
+          <img src="/bps-logo.svg" alt="Black Pepper Salt" className="h-auto w-56 max-w-full rounded-lg bg-black" />
+          <h1 className="mt-5 text-2xl font-bold leading-7 text-slate-950">BPS Event Management Portal</h1>
+          <p className="mt-2 text-sm leading-6 text-slate-500">Use credentials or access code provided by Boss/Admin.</p>
         </div>
         <div className="mt-5 grid grid-cols-2 rounded-lg bg-slate-100 p-1">
           <button type="button" onClick={() => setMode('account')} className={`rounded-md px-3 py-2 text-sm font-semibold ${mode === 'account' ? 'bg-white text-brand shadow-sm' : 'text-slate-600'}`}>Login + Password</button>
