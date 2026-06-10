@@ -21,5 +21,6 @@ export const endpoints = {
   notes: '/notes',
   notifications: '/notifications',
   submissions: '/submissions',
+  messages: '/messages',
   dashboard: '/dashboard'
 };

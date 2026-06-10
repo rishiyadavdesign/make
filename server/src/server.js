@@ -10,6 +10,7 @@ import { errorHandler, notFound } from './middleware/error.js';
 import { uploadStorageMode } from './utils/fileStorage.js';
 import authRoutes from './routes/authRoutes.js';
 import eventRoutes from './routes/eventRoutes.js';
+import messageRoutes from './routes/messageRoutes.js';
 import { dashboardRouter, makeResourceRouter } from './routes/resourceRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 
@@ -57,6 +58,7 @@ app.get('/api/config', (_req, res) => res.json({ uploadStorage: uploadStorageMod
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/events', eventRoutes);
+app.use('/api/messages', messageRoutes);
 app.use('/api/tasks', makeResourceRouter('tasks'));
 app.use('/api/equipment', makeResourceRouter('equipment'));
 app.use('/api/responsibilities', makeResourceRouter('responsibilities'));

@@ -6,6 +6,7 @@ import Expense from '../src/models/Expense.js';
 import Event from '../src/models/Event.js';
 import Note from '../src/models/Note.js';
 import Notification from '../src/models/Notification.js';
+import Message from '../src/models/Message.js';
 import Responsibility from '../src/models/Responsibility.js';
 import Submission from '../src/models/Submission.js';
 import Task from '../src/models/Task.js';
@@ -24,6 +25,7 @@ await Promise.all([
   Responsibility.deleteMany({}),
   Checklist.deleteMany({}),
   Note.deleteMany({}),
+  Message.deleteMany({}),
   Notification.deleteMany({}),
   Submission.deleteMany({})
 ]);
@@ -180,6 +182,24 @@ for (const event of events) {
     status: 'Submitted'
   });
 }
+
+await Message.create([
+  {
+    sender: boss._id,
+    recipient: manager._id,
+    body: 'Please keep the Meerut T20 League team updated in the portal chat.'
+  },
+  {
+    sender: manager._id,
+    recipient: team._id,
+    body: 'Share packing status here before leaving for the venue.'
+  },
+  {
+    sender: team._id,
+    recipient: boss._id,
+    body: 'I will update task status and equipment status from the event workspace.'
+  }
+]);
 
 console.log('Seed complete');
 await mongoose.disconnect();

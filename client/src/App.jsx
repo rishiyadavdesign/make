@@ -2,6 +2,7 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import Layout from './components/Layout.jsx';
 import { useAuth } from './context/AuthContext.jsx';
 import BossMonitoringDashboard from './pages/BossMonitoringDashboard.jsx';
+import ChatPage from './pages/ChatPage.jsx';
 import DashboardPage from './pages/DashboardPage.jsx';
 import EventSelectionPage from './pages/EventSelectionPage.jsx';
 import EventWorkspacePage from './pages/EventWorkspacePage.jsx';
@@ -30,6 +31,7 @@ export default function App() {
       <Route path="/first-login" element={<Protected><FirstLoginPage /></Protected>} />
       <Route element={<Protected><Layout /></Protected>}>
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/chat" element={<ChatPage />} />
         <Route path="/events" element={<EventSelectionPage />} />
         <Route path="/events/:id" element={<EventWorkspacePage />} />
         <Route path="/users" element={<Protected bossOnly><UserManagementPage /></Protected>} />

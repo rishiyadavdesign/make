@@ -1,4 +1,4 @@
-import { BarChart3, CalendarDays, LayoutDashboard, LogOut, Menu, Pin, Users } from 'lucide-react';
+import { BarChart3, CalendarDays, LayoutDashboard, LogOut, Menu, MessageCircle, Pin, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { api } from '../api/client.js';
@@ -10,7 +10,8 @@ import NotificationPanel from './NotificationPanel.jsx';
 function links(user) {
   const base = [
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/events', label: 'Events', icon: CalendarDays }
+    { to: '/events', label: 'Events', icon: CalendarDays },
+    { to: '/chat', label: 'Chat', icon: MessageCircle }
   ];
   if (isBoss(user)) {
     base.push({ to: '/users', label: 'Users', icon: Users }, { to: '/monitoring', label: 'Monitoring', icon: BarChart3 });
