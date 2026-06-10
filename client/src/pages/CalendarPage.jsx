@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, Edit3, Trash2 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../api/client.js';
 import { StatusBadge } from '../components/Badges.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -30,7 +30,9 @@ export default function CalendarPage() {
   const [plans, setPlans] = useState([]);
   const [form, setForm] = useState({ ...emptyPlan, date: new Date().toISOString().slice(0, 10) });
   const [editing, setEditing] = useState(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const longPressTimer = useRef(null);
 
   async function load() {
     const { data } = await api.get(`/calendar-plans?month=${month}`);
@@ -70,7 +72,14 @@ export default function CalendarPage() {
 
   function resetForm() {
     setEditing(null);
+    setIsFormOpen(false);
     setForm({ ...emptyPlan, date: `${month}-01` });
+  }
+
+  function openCreate(date = form.date || `${month}-01`) {
+    setEditing(null);
+    setForm({ ...emptyPlan, date });
+    setIsFormOpen(true);
   }
 
   function startEdit(plan) {
@@ -85,7 +94,16 @@ export default function CalendarPage() {
       status: plan.status,
       visibility: plan.visibility
     });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setIsFormOpen(true);
+  }
+
+  function startLongPress(date) {
+    window.clearTimeout(longPressTimer.current);
+    longPressTimer.current = window.setTimeout(() => openCreate(date), 550);
+  }
+
+  function clearLongPress() {
+    window.clearTimeout(longPressTimer.current);
   }
 
   async function submit(e) {
@@ -129,52 +147,47 @@ export default function CalendarPage() {
         </div>
       </div>
 
-      <form onSubmit={submit} className="grid gap-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm md:grid-cols-3 md:p-4">
-        <input placeholder="Plan title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
-        <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} required />
-        <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>{categories.map((item) => <option key={item}>{item}</option>)}</select>
-        <input type="time" value={form.startTime} onChange={(e) => setForm({ ...form, startTime: e.target.value })} />
-        <input type="time" value={form.endTime} onChange={(e) => setForm({ ...form, endTime: e.target.value })} />
-        <select value={form.visibility} onChange={(e) => setForm({ ...form, visibility: e.target.value })}>{visibilities.map((item) => <option key={item}>{item}</option>)}</select>
-        <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>{statuses.map((item) => <option key={item}>{item}</option>)}</select>
-        <textarea className="md:col-span-2" placeholder="Plan details" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-        <div className="grid grid-cols-2 gap-2 md:flex md:items-start">
-          <button className="primary-btn" disabled={saving}>{saving ? 'Saving...' : editing ? 'Update plan' : 'Add plan'}</button>
-          {editing && <button type="button" onClick={resetForm} className="secondary-btn">Cancel</button>}
-        </div>
-      </form>
+      <div className="flex flex-col gap-2 rounded-lg border border-green-100 bg-green-50 p-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm font-medium text-slate-700">Tap a date to select it. Long-press a date to add a plan.</p>
+        <button type="button" onClick={() => openCreate(form.date)} className="primary-btn">Add plan</button>
+      </div>
 
-      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
-        <div className="min-w-[58rem]">
+      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div className="w-full">
           <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50">
-            {weekdays.map((day) => <div key={day} className="px-3 py-2 text-[11px] font-bold text-slate-500">{day}</div>)}
+            {weekdays.map((day) => <div key={day} className="px-1 py-2 text-center text-[9px] font-bold text-slate-500 sm:px-3 sm:text-[11px]">{day}</div>)}
           </div>
           <div className="grid grid-cols-7">
             {calendarCells.map((cell) => {
               const dayPlans = cell.date ? grouped[cell.date] || [] : [];
               const isToday = cell.date === new Date().toISOString().slice(0, 10);
               const isSelected = cell.date === form.date;
-              if (!cell.date) return <div key={cell.key} className="min-h-32 border-b border-r border-slate-100 bg-slate-50/60" />;
+              if (!cell.date) return <div key={cell.key} className="min-h-20 border-b border-r border-slate-100 bg-slate-50/60 sm:min-h-32" />;
               const dateObj = new Date(cell.date);
               const dayNumber = dateObj.getDate();
               return (
                 <button
                   key={cell.key}
                   type="button"
-                  onClick={() => setForm({ ...form, date: cell.date })}
-                  className={`min-h-32 border-b border-r border-slate-100 p-2 text-left align-top hover:bg-green-50/40 ${isSelected ? 'outline outline-2 -outline-offset-2 outline-brand' : ''}`}
+                  onClick={() => setForm((current) => ({ ...current, date: cell.date }))}
+                  onPointerDown={() => startLongPress(cell.date)}
+                  onPointerUp={clearLongPress}
+                  onPointerLeave={clearLongPress}
+                  onPointerCancel={clearLongPress}
+                  onContextMenu={(e) => { e.preventDefault(); openCreate(cell.date); }}
+                  className={`min-h-20 touch-manipulation border-b border-r border-slate-100 p-1 text-left align-top hover:bg-green-50/40 sm:min-h-32 sm:p-2 ${isSelected ? 'outline outline-2 -outline-offset-2 outline-brand' : ''}`}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className={`text-sm font-bold ${isToday ? 'inline-flex h-7 w-7 items-center justify-center rounded-full bg-brand text-white' : 'text-slate-700'}`}>{dayNumber}</span>
-                    {dayPlans.length > 0 && <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">{dayPlans.length}</span>}
+                    <span className={`text-xs font-bold sm:text-sm ${isToday ? 'inline-flex h-6 w-6 items-center justify-center rounded-full bg-brand text-white sm:h-7 sm:w-7' : 'text-slate-700'}`}>{dayNumber}</span>
+                    {dayPlans.length > 0 && <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[9px] font-bold text-slate-500 sm:px-2 sm:text-[10px]">{dayPlans.length}</span>}
                   </div>
-                  <div className="mt-2 space-y-1">
-                    {dayPlans.slice(0, 3).map((plan) => (
-                      <div key={plan._id} className={`rounded-md px-2 py-1 text-[11px] font-semibold leading-4 ${plan.status === 'Done' ? 'bg-green-100 text-green-800' : plan.status === 'Cancelled' ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-700'}`}>
+                  <div className="mt-1 space-y-1 sm:mt-2">
+                    {dayPlans.slice(0, 2).map((plan) => (
+                      <div key={plan._id} className={`rounded px-1 py-0.5 text-[9px] font-semibold leading-3 sm:rounded-md sm:px-2 sm:py-1 sm:text-[11px] sm:leading-4 ${plan.status === 'Done' ? 'bg-green-100 text-green-800' : plan.status === 'Cancelled' ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-700'}`}>
                         <p className="truncate">{plan.startTime ? `${plan.startTime} ` : ''}{plan.title}</p>
                       </div>
                     ))}
-                    {dayPlans.length > 3 && <p className="text-[11px] font-semibold text-slate-500">+{dayPlans.length - 3} more</p>}
+                    {dayPlans.length > 2 && <p className="text-[9px] font-semibold text-slate-500 sm:text-[11px]">+{dayPlans.length - 2}</p>}
                   </div>
                 </button>
               );
@@ -182,6 +195,34 @@ export default function CalendarPage() {
           </div>
         </div>
       </div>
+
+      {isFormOpen && (
+        <div className="fixed inset-0 z-40 flex items-end bg-slate-950/40 p-0 sm:items-center sm:p-4" onClick={resetForm}>
+          <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-2xl bg-white p-4 shadow-xl sm:mx-auto sm:max-w-3xl sm:rounded-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-bold text-slate-950">{editing ? 'Edit plan' : 'Add plan'}</h3>
+                <p className="text-sm text-slate-500">{form.date ? new Date(form.date).toLocaleDateString() : 'Select a date'}</p>
+              </div>
+              <button type="button" onClick={resetForm} className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-500 hover:bg-slate-50">Close</button>
+            </div>
+            <form onSubmit={submit} className="grid gap-3 md:grid-cols-3">
+              <input placeholder="Plan title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
+              <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} required />
+              <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>{categories.map((item) => <option key={item}>{item}</option>)}</select>
+              <input type="time" value={form.startTime} onChange={(e) => setForm({ ...form, startTime: e.target.value })} />
+              <input type="time" value={form.endTime} onChange={(e) => setForm({ ...form, endTime: e.target.value })} />
+              <select value={form.visibility} onChange={(e) => setForm({ ...form, visibility: e.target.value })}>{visibilities.map((item) => <option key={item}>{item}</option>)}</select>
+              <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>{statuses.map((item) => <option key={item}>{item}</option>)}</select>
+              <textarea className="md:col-span-2" placeholder="Plan details" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+              <div className="grid grid-cols-2 gap-2 md:flex md:items-start">
+                <button className="primary-btn" disabled={saving}>{saving ? 'Saving...' : editing ? 'Update plan' : 'Add plan'}</button>
+                <button type="button" onClick={resetForm} className="secondary-btn">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <div>
         <h3 className="mb-3 text-sm font-bold uppercase tracking-normal text-slate-500">Plan details</h3>
