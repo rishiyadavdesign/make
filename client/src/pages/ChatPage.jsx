@@ -17,6 +17,7 @@ export default function ChatPage() {
   const [query, setQuery] = useState('');
   const [mobileConversationOpen, setMobileConversationOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
   const scroller = useRef(null);
   const activeContact = useMemo(() => contacts.find((contact) => contact._id === activeId), [contacts, activeId]);
   const filteredContacts = useMemo(() => {
@@ -49,7 +50,9 @@ export default function ChatPage() {
   useEffect(() => {
     if (!activeId) return undefined;
     loadConversation(activeId);
-    const timer = window.setInterval(() => loadConversation(activeId), 8000);
+    const timer = window.setInterval(() => {
+      if (!document.hidden) loadConversation(activeId);
+    }, 3000);
     return () => window.clearInterval(timer);
   }, [activeId]);
 
@@ -59,11 +62,31 @@ export default function ChatPage() {
 
   async function send(e) {
     e.preventDefault();
-    if (!activeId || !body.trim()) return;
+    if (!activeId || !body.trim() || sending) return;
     const message = body.trim();
+    const tempId = `temp-${Date.now()}`;
     setBody('');
-    await api.post('/messages', { recipient: activeId, body: message });
-    await loadConversation(activeId);
+    setSending(true);
+    setMessages((current) => [
+      ...current,
+      {
+        _id: tempId,
+        sender: user,
+        recipient: activeContact,
+        body: message,
+        createdAt: new Date().toISOString(),
+        pending: true
+      }
+    ]);
+    try {
+      const { data } = await api.post('/messages', { recipient: activeId, body: message });
+      setMessages((current) => current.map((item) => item._id === tempId ? data : item));
+      loadContacts().catch(() => {});
+    } catch (err) {
+      setMessages((current) => current.map((item) => item._id === tempId ? { ...item, failed: true, pending: false } : item));
+    } finally {
+      setSending(false);
+    }
   }
 
   return (
@@ -146,7 +169,9 @@ export default function ChatPage() {
                 <div key={message._id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[84%] rounded-2xl px-4 py-2 shadow-sm sm:max-w-[72%] ${mine ? 'rounded-br-md bg-brand text-white' : 'rounded-bl-md bg-white text-slate-800'}`}>
                     <p className="whitespace-pre-wrap break-words text-sm leading-6">{message.body}</p>
-                    <p className={`mt-1 text-[11px] ${mine ? 'text-green-50' : 'text-slate-400'}`}>{timeLabel(message.createdAt)}</p>
+                    <p className={`mt-1 text-[11px] ${mine ? 'text-green-50' : 'text-slate-400'}`}>
+                      {message.failed ? 'Not sent' : message.pending ? 'Sending...' : timeLabel(message.createdAt)}
+                    </p>
                   </div>
                 </div>
               );
@@ -155,7 +180,7 @@ export default function ChatPage() {
 
           <form onSubmit={send} className="grid grid-cols-[1fr_auto] gap-2 border-t border-slate-200 bg-white p-3">
             <input value={body} onChange={(e) => setBody(e.target.value)} disabled={!activeContact} placeholder={activeContact ? 'Type a message...' : 'Select a contact first'} />
-            <button disabled={!activeContact || !body.trim()} className="inline-flex min-h-11 min-w-12 items-center justify-center rounded-lg bg-brand px-3 text-sm font-semibold text-white shadow-sm hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 sm:min-w-24">
+            <button disabled={!activeContact || !body.trim() || sending} className="inline-flex min-h-11 min-w-12 items-center justify-center rounded-lg bg-brand px-3 text-sm font-semibold text-white shadow-sm hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 sm:min-w-24">
               <SendHorizonal size={18} />
               <span className="hidden sm:inline">Send</span>
             </button>

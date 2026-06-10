@@ -79,9 +79,11 @@ export const sendMessage = asyncHandler(async (req, res) => {
   await Notification.create({
     userId: recipient,
     eventId: eventId || undefined,
-    title: 'New chat message',
-    message: `${req.user.fullName}: ${message.body.slice(0, 120)}`,
+    title: `Message from ${req.user.fullName}`,
+    message: message.body.slice(0, 140),
     type: 'Chat'
+  }).catch((err) => {
+    console.error('Failed to create chat notification:', err);
   });
 
   res.status(201).json(await Message.findById(message._id).populate('sender', userSelect).populate('recipient', userSelect));

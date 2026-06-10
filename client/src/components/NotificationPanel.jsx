@@ -6,8 +6,13 @@ import { api } from '../api/client.js';
 export default function NotificationPanel() {
   const [items, setItems] = useState([]);
   const [open, setOpen] = useState(false);
+  const load = () => api.get('/notifications').then((res) => setItems(res.data.slice(0, 8))).catch(() => {});
   useEffect(() => {
-    api.get('/notifications').then((res) => setItems(res.data.slice(0, 5))).catch(() => {});
+    load();
+    const timer = window.setInterval(() => {
+      if (!document.hidden) load();
+    }, 10000);
+    return () => window.clearInterval(timer);
   }, []);
   async function markRead(item) {
     if (item.isRead) return;
@@ -32,7 +37,8 @@ export default function NotificationPanel() {
                   {!item.isRead && <button onClick={() => markRead(item)} className="text-xs font-semibold text-brand">Read</button>}
                 </div>
                 <p className="text-xs text-slate-500">{item.message}</p>
-                {item.eventId?._id && <Link onClick={() => { markRead(item); setOpen(false); }} to={`/events/${item.eventId._id}`} className="mt-1 block text-xs font-semibold text-brand">Open event</Link>}
+                {item.type === 'Chat' && <Link onClick={() => { markRead(item); setOpen(false); }} to="/chat" className="mt-1 block text-xs font-semibold text-brand">Open chat</Link>}
+                {item.type !== 'Chat' && item.eventId?._id && <Link onClick={() => { markRead(item); setOpen(false); }} to={`/events/${item.eventId._id}`} className="mt-1 block text-xs font-semibold text-brand">Open event</Link>}
               </div>
             ))}
           </div>
