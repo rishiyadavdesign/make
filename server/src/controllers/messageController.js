@@ -5,6 +5,7 @@ import Notification from '../models/Notification.js';
 import User from '../models/User.js';
 import { isBoss } from '../middleware/auth.js';
 import { eventScopeQuery } from '../utils/scope.js';
+import { normalizeFiles } from '../utils/fileStorage.js';
 
 const userSelect = 'fullName username role department status';
 
@@ -66,13 +67,17 @@ export const listConversation = asyncHandler(async (req, res) => {
 
 export const sendMessage = asyncHandler(async (req, res) => {
   const { recipient, body, eventId } = req.body;
-  if (!recipient || !String(body || '').trim()) return res.status(400).json({ message: 'Recipient and message are required' });
+  const attachments = await normalizeFiles(req.files);
+  if (!recipient || (!String(body || '').trim() && attachments.length === 0)) {
+    return res.status(400).json({ message: 'Recipient and message or attachment are required' });
+  }
   if (!(await canMessage(req.user, recipient))) return res.status(403).json({ message: 'Forbidden' });
 
   const message = await Message.create({
     sender: req.user._id,
     recipient,
-    body: String(body).trim(),
+    body: String(body || '').trim(),
+    attachments,
     eventId: eventId || undefined
   });
 
@@ -80,7 +85,7 @@ export const sendMessage = asyncHandler(async (req, res) => {
     userId: recipient,
     eventId: eventId || undefined,
     title: `Message from ${req.user.fullName}`,
-    message: message.body.slice(0, 140),
+    message: message.body ? message.body.slice(0, 140) : `${attachments.length} attachment${attachments.length === 1 ? '' : 's'}`,
     type: 'Chat'
   }).catch((err) => {
     console.error('Failed to create chat notification:', err);

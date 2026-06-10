@@ -1,4 +1,4 @@
-import { ArrowLeft, MessageCircle, Search, SendHorizonal, UsersRound } from 'lucide-react';
+import { ArrowLeft, Mic, MessageCircle, Paperclip, Search, SendHorizonal, Smile, Square, UsersRound, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../api/client.js';
 import { RoleBadge } from '../components/Badges.jsx';
@@ -8,17 +8,32 @@ function timeLabel(value) {
   return new Date(value).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
+function fileUrl(file) {
+  if (/^(https?:|blob:|data:)/i.test(file.path)) return file.path;
+  const base = (api.defaults.baseURL || '').replace(/\/api\/?$/, '');
+  return `${base}/${file.path}`;
+}
+
+const quickEmoji = ['👍', '✅', '🙏', '🔥', '😊', '👌', '📍', '🚗', '🎤', '⚠️'];
+
 export default function ChatPage() {
   const { user } = useAuth();
   const [contacts, setContacts] = useState([]);
   const [activeId, setActiveId] = useState('');
   const [messages, setMessages] = useState([]);
   const [body, setBody] = useState('');
+  const [files, setFiles] = useState([]);
+  const [emojiOpen, setEmojiOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [mobileConversationOpen, setMobileConversationOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [recordingError, setRecordingError] = useState('');
   const scroller = useRef(null);
+  const recorder = useRef(null);
+  const chunks = useRef([]);
+  const fileInput = useRef(null);
   const activeContact = useMemo(() => contacts.find((contact) => contact._id === activeId), [contacts, activeId]);
   const filteredContacts = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -62,10 +77,13 @@ export default function ChatPage() {
 
   async function send(e) {
     e.preventDefault();
-    if (!activeId || !body.trim() || sending) return;
+    if (!activeId || (!body.trim() && files.length === 0) || sending) return;
     const message = body.trim();
     const tempId = `temp-${Date.now()}`;
+    const outgoingFiles = files;
     setBody('');
+    setFiles([]);
+    setEmojiOpen(false);
     setSending(true);
     setMessages((current) => [
       ...current,
@@ -74,12 +92,22 @@ export default function ChatPage() {
         sender: user,
         recipient: activeContact,
         body: message,
+        attachments: outgoingFiles.map((file) => ({
+          filename: file.name,
+          path: URL.createObjectURL(file),
+          mimetype: file.type,
+          size: file.size
+        })),
         createdAt: new Date().toISOString(),
         pending: true
       }
     ]);
     try {
-      const { data } = await api.post('/messages', { recipient: activeId, body: message });
+      const payload = new FormData();
+      payload.append('recipient', activeId);
+      payload.append('body', message);
+      outgoingFiles.forEach((file) => payload.append('files', file));
+      const { data } = await api.post('/messages', payload);
       setMessages((current) => current.map((item) => item._id === tempId ? data : item));
       loadContacts().catch(() => {});
     } catch (err) {
@@ -87,6 +115,48 @@ export default function ChatPage() {
     } finally {
       setSending(false);
     }
+  }
+
+  function addFiles(list) {
+    setFiles((current) => [...current, ...Array.from(list || [])].slice(0, 5));
+  }
+
+  function removeFile(index) {
+    setFiles((current) => current.filter((_, fileIndex) => fileIndex !== index));
+  }
+
+  async function startRecording() {
+    setRecordingError('');
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+      setRecordingError('Voice recording is not supported in this browser.');
+      return;
+    }
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      setRecordingError('Microphone permission is needed to record voice.');
+      return;
+    }
+    chunks.current = [];
+    const mediaRecorder = new MediaRecorder(stream);
+    recorder.current = mediaRecorder;
+    mediaRecorder.ondataavailable = (event) => {
+      if (event.data.size > 0) chunks.current.push(event.data);
+    };
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(chunks.current, { type: mediaRecorder.mimeType || 'audio/webm' });
+      const file = new File([blob], `voice-${Date.now()}.webm`, { type: blob.type || 'audio/webm' });
+      setFiles((current) => [...current, file].slice(0, 5));
+      stream.getTracks().forEach((track) => track.stop());
+      setRecording(false);
+    };
+    mediaRecorder.start();
+    setRecording(true);
+  }
+
+  function stopRecording() {
+    recorder.current?.stop();
   }
 
   return (
@@ -168,7 +238,12 @@ export default function ChatPage() {
               return (
                 <div key={message._id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[84%] rounded-2xl px-4 py-2 shadow-sm sm:max-w-[72%] ${mine ? 'rounded-br-md bg-brand text-white' : 'rounded-bl-md bg-white text-slate-800'}`}>
-                    <p className="whitespace-pre-wrap break-words text-sm leading-6">{message.body}</p>
+                    {message.body && <p className="whitespace-pre-wrap break-words text-sm leading-6">{message.body}</p>}
+                    {message.attachments?.length > 0 && (
+                      <div className="mt-2 space-y-2">
+                        {message.attachments.map((file, index) => <ChatAttachment key={`${file.path}-${index}`} file={file} mine={mine} />)}
+                      </div>
+                    )}
                     <p className={`mt-1 text-[11px] ${mine ? 'text-green-50' : 'text-slate-400'}`}>
                       {message.failed ? 'Not sent' : message.pending ? 'Sending...' : timeLabel(message.createdAt)}
                     </p>
@@ -178,12 +253,36 @@ export default function ChatPage() {
             })}
           </div>
 
-          <form onSubmit={send} className="grid grid-cols-[1fr_auto] gap-2 border-t border-slate-200 bg-white p-3">
-            <input value={body} onChange={(e) => setBody(e.target.value)} disabled={!activeContact} placeholder={activeContact ? 'Type a message...' : 'Select a contact first'} />
-            <button disabled={!activeContact || !body.trim() || sending} className="inline-flex min-h-11 min-w-12 items-center justify-center rounded-lg bg-brand px-3 text-sm font-semibold text-white shadow-sm hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 sm:min-w-24">
-              <SendHorizonal size={18} />
-              <span className="hidden sm:inline">Send</span>
-            </button>
+          <form onSubmit={send} className="border-t border-slate-200 bg-white p-3">
+            {files.length > 0 && (
+              <div className="mb-2 flex gap-2 overflow-x-auto pb-1">
+                {files.map((file, index) => (
+                  <div key={`${file.name}-${index}`} className="flex shrink-0 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-xs font-medium text-slate-600">
+                    <span className="max-w-32 truncate">{file.name}</span>
+                    <button type="button" onClick={() => removeFile(index)} className="rounded-full p-1 text-slate-400 hover:bg-white hover:text-rose-600"><X size={13} /></button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {emojiOpen && (
+              <div className="mb-2 flex flex-wrap gap-1 rounded-lg border border-slate-200 bg-slate-50 p-2">
+                {quickEmoji.map((emoji) => <button key={emoji} type="button" onClick={() => setBody((current) => `${current}${emoji}`)} className="rounded-lg px-2 py-1 text-lg hover:bg-white">{emoji}</button>)}
+              </div>
+            )}
+            {recordingError && <p className="mb-2 rounded-lg bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">{recordingError}</p>}
+            <div className="grid grid-cols-[auto_auto_1fr_auto_auto] gap-2">
+              <button type="button" disabled={!activeContact} onClick={() => setEmojiOpen((value) => !value)} className="secondary-btn min-w-11 px-3" title="Emoji"><Smile size={18} /></button>
+              <button type="button" disabled={!activeContact} onClick={() => fileInput.current?.click()} className="secondary-btn min-w-11 px-3" title="Attach image/file"><Paperclip size={18} /></button>
+              <input value={body} onChange={(e) => setBody(e.target.value)} disabled={!activeContact} placeholder={activeContact ? 'Type a message...' : 'Select a contact first'} />
+              <input ref={fileInput} type="file" accept="image/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx" multiple className="hidden" onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
+              <button type="button" disabled={!activeContact} onClick={recording ? stopRecording : startRecording} className={`secondary-btn min-w-11 px-3 ${recording ? 'border-rose-200 bg-rose-50 text-rose-600' : ''}`} title={recording ? 'Stop recording' : 'Record voice'}>
+                {recording ? <Square size={17} /> : <Mic size={18} />}
+              </button>
+              <button disabled={!activeContact || (!body.trim() && files.length === 0) || sending} className="inline-flex min-h-11 min-w-12 items-center justify-center rounded-lg bg-brand px-3 text-sm font-semibold text-white shadow-sm hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 sm:min-w-24">
+                <SendHorizonal size={18} />
+                <span className="hidden sm:inline">Send</span>
+              </button>
+            </div>
           </form>
         </section>
       </div>
@@ -203,5 +302,21 @@ function Avatar({ name }) {
     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-green-100 text-xs font-black text-brand">
       {initials || 'U'}
     </span>
+  );
+}
+
+function ChatAttachment({ file, mine }) {
+  const url = fileUrl(file);
+  const type = file.mimetype || '';
+  if (type.startsWith('image/')) {
+    return <a href={url} target="_blank" rel="noreferrer"><img src={url} alt={file.filename || 'Attachment'} className="max-h-60 rounded-lg object-cover" /></a>;
+  }
+  if (type.startsWith('audio/')) {
+    return <audio src={url} controls className="max-w-full" />;
+  }
+  return (
+    <a href={url} target="_blank" rel="noreferrer" className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold ${mine ? 'bg-white/15 text-white' : 'bg-slate-100 text-slate-700'}`}>
+      <Paperclip size={14} /> <span className="max-w-48 truncate">{file.filename || 'Attachment'}</span>
+    </a>
   );
 }

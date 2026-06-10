@@ -4,7 +4,8 @@ const messageSchema = new mongoose.Schema(
   {
     sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     recipient: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    body: { type: String, required: true, trim: true, maxlength: 2000 },
+    body: { type: String, default: '', trim: true, maxlength: 2000 },
+    attachments: [{ filename: String, path: String, mimetype: String, size: Number }],
     eventId: { type: mongoose.Schema.Types.ObjectId, ref: 'Event' },
     readAt: Date
   },
