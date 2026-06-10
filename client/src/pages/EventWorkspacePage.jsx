@@ -148,7 +148,7 @@ export default function EventWorkspacePage() {
       </div>
 
       {editingEvent && <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"><EventForm users={isBoss(user) ? allUsers : team} initial={{ ...event, assignedManager: event.assignedManager?._id || '', teamMembers: (event.teamMembers || []).map((u) => u._id) }} onSubmit={saveEvent} /></div>}
-      {tab === 'overview' && <Overview event={event} team={team} />}
+      {tab === 'overview' && <Overview event={event} team={team} canManage={canManage} reload={load} />}
       {tab === 'tasks' && <Tasks tasks={data.tasks} team={team} user={user} canManage={canManage} eventId={id} create={create('tasks')} update={update('tasks')} remove={remove('tasks')} />}
       {tab === 'equipment' && <Equipment items={data.equipment} team={team} canManage={canManage} eventId={id} create={create('equipment')} update={update('equipment')} remove={remove('equipment')} />}
       {tab === 'responsibilities' && <SimpleManager title="Responsibilities" resource="responsibilities" items={data.responsibilities} team={team} eventId={id} canManage={canManage} reload={load} />}
@@ -255,7 +255,51 @@ function Expenses({ items, eventId, user, canReview, reload }) {
   );
 }
 
-function Overview({ event, team }) {
+function Overview({ event, team, canManage, reload }) {
+  const emptyDetail = { category: 'Travel', title: '', dateTime: '', location: '', assignedTo: '', description: '' };
+  const [form, setForm] = useState(emptyDetail);
+  const [saving, setSaving] = useState(false);
+  const details = event.overviewDetails || [];
+
+  function cleanDetails(items) {
+    return items.map((item) => ({
+      _id: item._id,
+      category: item.category || 'Travel',
+      title: item.title,
+      dateTime: item.dateTime || '',
+      location: item.location || '',
+      assignedTo: item.assignedTo?._id || item.assignedTo || undefined,
+      description: item.description || ''
+    }));
+  }
+
+  async function saveDetails(nextDetails) {
+    setSaving(true);
+    try {
+      await api.put(`/events/${event._id}`, { overviewDetails: cleanDetails(nextDetails) });
+      await reload();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function addDetail(e) {
+    e.preventDefault();
+    const next = {
+      ...form,
+      title: form.title.trim(),
+      location: form.location.trim(),
+      description: form.description.trim()
+    };
+    if (!next.title) return;
+    await saveDetails([...details, next]);
+    setForm(emptyDetail);
+  }
+
+  async function removeDetail(detailId) {
+    await saveDetails(details.filter((detail) => String(detail._id) !== String(detailId)));
+  }
+
   return (
     <div className="grid gap-3 lg:grid-cols-3">
       <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:p-4 lg:col-span-2">
@@ -271,6 +315,52 @@ function Overview({ event, team }) {
       <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
         <h3 className="font-semibold">Team</h3>
         <div className="mt-3 space-y-2">{team.map((person) => <div key={person._id} className="rounded-lg bg-slate-50 p-3"><p className="text-sm font-medium">{person.fullName}</p><p className="text-xs text-slate-500">{person.role}</p></div>)}</div>
+      </div>
+      <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:p-4 lg:col-span-3">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="font-semibold">Overview cards</h3>
+            <p className="text-sm text-slate-500">Travel, reporting, parking, vendor, and other event details.</p>
+          </div>
+        </div>
+
+        {canManage && (
+          <form onSubmit={addDetail} className="mt-4 grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 md:grid-cols-3">
+            <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+              {['Travel', 'Hotel', 'Reporting', 'Vendor', 'Contact', 'Parking', 'Other'].map((item) => <option key={item}>{item}</option>)}
+            </select>
+            <input placeholder="Title, e.g. Team bus pickup" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
+            <input placeholder="Time / date, e.g. 6:30 AM" value={form.dateTime} onChange={(e) => setForm({ ...form, dateTime: e.target.value })} />
+            <input placeholder="Location" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
+            <select value={form.assignedTo} onChange={(e) => setForm({ ...form, assignedTo: e.target.value })}>
+              <option value="">No assigned person</option>
+              {team.map((person) => <option key={person._id} value={person._id}>{person.fullName}</option>)}
+            </select>
+            <textarea className="md:col-span-2" placeholder="Details / instructions" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+            <button className="primary-btn md:self-start" disabled={saving}>{saving ? 'Saving...' : 'Add card'}</button>
+          </form>
+        )}
+
+        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {details.map((detail) => (
+            <div key={detail._id} className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <span className="inline-flex rounded-full bg-green-50 px-2.5 py-1 text-xs font-semibold text-brand">{detail.category}</span>
+                  <h4 className="mt-2 break-words font-semibold text-slate-950">{detail.title}</h4>
+                </div>
+                {canManage && <button onClick={() => removeDetail(detail._id)} className="shrink-0 rounded-lg p-2 text-rose-600 hover:bg-rose-50" title="Remove card"><Trash2 size={16} /></button>}
+              </div>
+              <dl className="mt-3 space-y-2 text-sm">
+                {detail.dateTime && <InfoRow label="Time" value={detail.dateTime} />}
+                {detail.location && <InfoRow label="Location" value={detail.location} />}
+                {detail.assignedTo && <InfoRow label="Assigned to" value={detail.assignedTo.fullName || 'Assigned'} />}
+              </dl>
+              {detail.description && <p className="mt-3 whitespace-pre-wrap text-sm text-slate-600">{detail.description}</p>}
+            </div>
+          ))}
+          {details.length === 0 && <p className="text-sm text-slate-500">No extra overview cards yet.</p>}
+        </div>
       </div>
     </div>
   );

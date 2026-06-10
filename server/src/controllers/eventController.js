@@ -14,6 +14,7 @@ export const listEvents = asyncHandler(async (req, res) => {
   const events = await Event.find(await eventScopeQuery(req.user))
     .populate('assignedManager', 'fullName role')
     .populate('teamMembers', 'fullName role')
+    .populate('overviewDetails.assignedTo', 'fullName role')
     .sort({ status: 1, date: 1 });
   res.json(events.map((event) => withPinnedFlag(event, req.user)));
 });
@@ -22,7 +23,8 @@ export const getEvent = asyncHandler(async (req, res) => {
   if (!(await canAccessEvent(req.user, req.params.id))) return res.status(403).json({ message: 'Forbidden' });
   const event = await Event.findById(req.params.id)
     .populate('assignedManager', 'fullName role email')
-    .populate('teamMembers', 'fullName role email');
+    .populate('teamMembers', 'fullName role email')
+    .populate('overviewDetails.assignedTo', 'fullName role email');
   if (!event) return res.status(404).json({ message: 'Event not found' });
   res.json(withPinnedFlag(event, req.user));
 });

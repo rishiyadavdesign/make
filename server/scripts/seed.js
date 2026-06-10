@@ -77,7 +77,25 @@ const events = await Event.create([
     status: 'Active',
     assignedManager: manager._id,
     teamMembers: [team._id],
-    importantInstructions: 'Coordinate gate branding and player tunnel checks before audience entry.'
+    importantInstructions: 'Coordinate gate branding and player tunnel checks before audience entry.',
+    overviewDetails: [
+      {
+        category: 'Travel',
+        title: 'Crew pickup from office',
+        dateTime: '18/07/2026, 05:45 AM',
+        location: 'BPS Office',
+        assignedTo: manager._id,
+        description: 'Team bus leaves sharp at 6:00 AM. Carry ID cards and event passes.'
+      },
+      {
+        category: 'Reporting',
+        title: 'Venue reporting point',
+        dateTime: '18/07/2026, 08:00 AM',
+        location: 'Gate 2 - Meerut Stadium',
+        assignedTo: team._id,
+        description: 'Report to operations desk before starting branding checks.'
+      }
+    ]
   },
   {
     eventName: 'Wedding Asia',
@@ -89,7 +107,17 @@ const events = await Event.create([
     status: 'Planning',
     assignedManager: manager._id,
     teamMembers: [team._id],
-    importantInstructions: 'VIP lounge and sponsor stalls must be inspected one day before opening.'
+    importantInstructions: 'VIP lounge and sponsor stalls must be inspected one day before opening.',
+    overviewDetails: [
+      {
+        category: 'Parking',
+        title: 'Vendor parking entry',
+        dateTime: '02/08/2026, 07:00 AM',
+        location: 'Service Gate B',
+        assignedTo: manager._id,
+        description: 'Keep vendor vehicle list ready for security.'
+      }
+    ]
   },
   {
     eventName: 'Aura Launch Event',
@@ -101,7 +129,17 @@ const events = await Event.create([
     status: 'Planning',
     assignedManager: manager._id,
     teamMembers: [team._id],
-    importantInstructions: 'Keep reveal sequence confidential until rehearsal lock.'
+    importantInstructions: 'Keep reveal sequence confidential until rehearsal lock.',
+    overviewDetails: [
+      {
+        category: 'Vendor',
+        title: 'Stage reveal vendor call',
+        dateTime: '20/08/2026, 01:00 PM',
+        location: 'Main ballroom',
+        assignedTo: manager._id,
+        description: 'Confirm final cue sheet before rehearsal.'
+      }
+    ]
   },
   {
     eventName: 'UP T20',
@@ -113,7 +151,17 @@ const events = await Event.create([
     status: 'Planning',
     assignedManager: manager._id,
     teamMembers: [team._id],
-    importantInstructions: 'Confirm power backup for all digital screens.'
+    importantInstructions: 'Confirm power backup for all digital screens.',
+    overviewDetails: [
+      {
+        category: 'Travel',
+        title: 'Equipment vehicle arrival',
+        dateTime: '05/09/2026, 06:45 AM',
+        location: 'Loading bay',
+        assignedTo: team._id,
+        description: 'Check microphones, cables, and screen backup before handover.'
+      }
+    ]
   }
 ]);
 
