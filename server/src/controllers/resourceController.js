@@ -84,7 +84,11 @@ async function notifyUser({ userId, eventId, title, message, type = 'Info' }) {
 export function listResource(type) {
   return asyncHandler(async (req, res) => {
     const Model = registry[type];
-    const docs = await populate(Model.find(await scopedQuery(type, req.user, req.query)), type).sort({ createdAt: -1 });
+    const query = await scopedQuery(type, req.user, req.query);
+    if (type === 'notifications' && req.query.unread === 'true') query.isRead = false;
+    const findQuery = populate(Model.find(query), type).sort({ createdAt: -1 });
+    if (type === 'notifications') findQuery.limit(Math.min(Number(req.query.limit || 30), 100));
+    const docs = await findQuery;
     res.json(docs);
   });
 }
@@ -165,6 +169,12 @@ export function updateResource(type) {
     const Model = registry[type];
     const doc = await Model.findById(req.params.id);
     if (!doc) return res.status(404).json({ message: 'Not found' });
+    if (type === 'notifications') {
+      if (String(doc.userId) !== String(req.user._id)) return res.status(403).json({ message: 'Forbidden' });
+      doc.isRead = Boolean(req.body.isRead);
+      await doc.save();
+      return res.json(await populate(Model.findById(doc._id), type));
+    }
     if (doc.eventId) await assertEventAccess(req, doc.eventId);
 
     if (isMember(req.user)) {
@@ -209,6 +219,11 @@ export function deleteResource(type) {
     const Model = registry[type];
     const doc = await Model.findById(req.params.id);
     if (!doc) return res.status(404).json({ message: 'Not found' });
+    if (type === 'notifications') {
+      if (String(doc.userId) !== String(req.user._id)) return res.status(403).json({ message: 'Forbidden' });
+      await doc.deleteOne();
+      return res.json({ message: 'Deleted' });
+    }
     if (doc.eventId) await assertEventAccess(req, doc.eventId);
     if (isMember(req.user)) return res.status(403).json({ message: 'Forbidden' });
     if (type === 'expenses' && !isBoss(req.user)) {
@@ -243,6 +258,11 @@ export const reviewSubmission = asyncHandler(async (req, res) => {
     type: 'Review'
   });
   res.json(await populate(Submission.findById(submission._id), 'submissions'));
+});
+
+export const markAllNotificationsRead = asyncHandler(async (req, res) => {
+  await Notification.updateMany({ userId: req.user._id, isRead: false }, { isRead: true });
+  res.json({ message: 'Notifications marked read' });
 });
 
 export const reviewExpense = asyncHandler(async (req, res) => {

@@ -1,5 +1,7 @@
 import asyncHandler from 'express-async-handler';
 import AppNote from '../models/AppNote.js';
+import Notification from '../models/Notification.js';
+import User from '../models/User.js';
 import { isBoss } from '../middleware/auth.js';
 
 function readableQuery(user) {
@@ -26,6 +28,15 @@ export const createAppNote = asyncHandler(async (req, res) => {
     visibility: req.body.visibility || 'Personal',
     createdBy: req.user._id
   });
+  if (note.visibility === 'Shared') {
+    const recipients = await User.find({ _id: { $ne: req.user._id }, status: 'Active' }).select('_id');
+    await Promise.all(recipients.map((recipient) => Notification.create({
+      userId: recipient._id,
+      title: 'Shared note added',
+      message: `${req.user.fullName} shared "${note.title}".`,
+      type: 'Note'
+    })));
+  }
   res.status(201).json(await AppNote.findById(note._id).populate('createdBy', 'fullName username role department'));
 });
 

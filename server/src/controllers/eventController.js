@@ -47,7 +47,8 @@ export const updateEvent = asyncHandler(async (req, res) => {
   Object.assign(event, req.body);
   await event.save();
   await syncAssignments(event, previousAssignedIds);
-  await notifyAssignedUsers(event, previousAssignedIds);
+  await notifyAssignedUsers(event, previousAssignedIds, req.user._id);
+  await notifyExistingAssignedUsers(event, previousAssignedIds, req.user._id);
   res.json(event);
 });
 
@@ -80,15 +81,28 @@ async function syncAssignments(event, previousIds = []) {
   }
 }
 
-async function notifyAssignedUsers(event, previousIds = []) {
+async function notifyAssignedUsers(event, previousIds = [], actorId = null) {
   const previous = new Set(previousIds.map(String));
-  const nextIds = assignedUserIds(event).filter((id) => !previous.has(String(id)));
+  const nextIds = assignedUserIds(event).filter((id) => !previous.has(String(id)) && String(id) !== String(actorId || ''));
   if (!nextIds.length) return;
   await Promise.all(nextIds.map((userId) => Notification.create({
     userId,
     eventId: event._id,
     title: 'Event assigned',
     message: `You have been assigned to ${event.eventName}.`,
+    type: 'Event'
+  })));
+}
+
+async function notifyExistingAssignedUsers(event, previousIds = [], actorId = null) {
+  const current = assignedUserIds(event);
+  const existingIds = current.filter((id) => previousIds.includes(String(id)) && String(id) !== String(actorId || ''));
+  if (!existingIds.length) return;
+  await Promise.all(existingIds.map((userId) => Notification.create({
+    userId,
+    eventId: event._id,
+    title: 'Event details updated',
+    message: `${event.eventName} details were updated.`,
     type: 'Event'
   })));
 }

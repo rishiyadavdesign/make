@@ -1,5 +1,7 @@
 import asyncHandler from 'express-async-handler';
 import CalendarPlan from '../models/CalendarPlan.js';
+import Notification from '../models/Notification.js';
+import User from '../models/User.js';
 import { isBoss } from '../middleware/auth.js';
 
 function readableQuery(user) {
@@ -39,6 +41,15 @@ export const createCalendarPlan = asyncHandler(async (req, res) => {
     visibility: req.body.visibility || 'Personal',
     createdBy: req.user._id
   });
+  if (plan.visibility === 'Shared') {
+    const recipients = await User.find({ _id: { $ne: req.user._id }, status: 'Active' }).select('_id');
+    await Promise.all(recipients.map((recipient) => Notification.create({
+      userId: recipient._id,
+      title: 'Shared calendar plan',
+      message: `${req.user.fullName} added "${plan.title}" on ${new Date(plan.date).toLocaleDateString()}.`,
+      type: 'Calendar'
+    })));
+  }
   res.status(201).json(await CalendarPlan.findById(plan._id).populate('createdBy', 'fullName username role department'));
 });
 
