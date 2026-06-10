@@ -7,20 +7,30 @@ function Field({ label, children }) {
   return <label className="space-y-1.5 text-sm font-medium text-slate-700"><span>{label}</span>{children}</label>;
 }
 
-export function UserForm({ onSubmit, initial = {} }) {
+export function UserForm({ onSubmit, initial = {}, saving = false }) {
   const [form, setForm] = useState({ fullName: '', username: '', email: '', phone: '', password: '', accessCode: '', role: 'Team Member', department: '', status: 'Active', ...initial });
   const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
+  const generateCode = () => {
+    const prefix = form.role === 'Project Manager' ? 'BPS-MANAGER' : form.role === 'Boss/Admin' ? 'BPS-BOSS' : 'BPS-MEMBER';
+    setForm({ ...form, accessCode: `${prefix}-${Math.random().toString(36).slice(2, 7).toUpperCase()}` });
+  };
   return (
     <form onSubmit={(e) => { e.preventDefault(); onSubmit(form); }} className="grid gap-3 md:grid-cols-2">
       <Field label="Full name"><input value={form.fullName} onChange={set('fullName')} required /></Field>
       <Field label="Username"><input value={form.username} onChange={set('username')} required /></Field>
       <Field label="Email"><input type="email" value={form.email} onChange={set('email')} required /></Field>
       <Field label="Phone"><input value={form.phone} onChange={set('phone')} /></Field>
-      <Field label="Temporary password"><input value={form.password} onChange={set('password')} placeholder={initial._id ? 'Leave blank to keep' : ''} /></Field>
-      <Field label="Access code"><input value={form.accessCode} onChange={set('accessCode')} required /></Field>
+      <Field label="Temporary password"><input type="password" value={form.password} onChange={set('password')} placeholder={initial._id ? 'Leave blank to keep' : 'Required for new user'} required={!initial._id} /></Field>
+      <Field label="Access code">
+        <div className="grid grid-cols-[1fr_auto] gap-2">
+          <input value={form.accessCode} onChange={set('accessCode')} required />
+          <button type="button" onClick={generateCode} className="secondary-btn px-3">Generate</button>
+        </div>
+      </Field>
       <Field label="Role"><select value={form.role} onChange={set('role')}>{roles.map((r) => <option key={r}>{r}</option>)}</select></Field>
       <Field label="Department"><input value={form.department} onChange={set('department')} /></Field>
-      <button className="primary-btn md:col-span-2">Save user</button>
+      <Field label="Status"><select value={form.status} onChange={set('status')}>{['Active', 'Inactive', 'Suspended'].map((item) => <option key={item}>{item}</option>)}</select></Field>
+      <button disabled={saving} className="primary-btn disabled:cursor-not-allowed disabled:bg-slate-300 md:col-span-2">{saving ? 'Saving...' : 'Save user'}</button>
     </form>
   );
 }

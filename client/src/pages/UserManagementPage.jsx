@@ -11,6 +11,8 @@ export default function UserManagementPage() {
   const [role, setRole] = useState('All');
   const [status, setStatus] = useState('All');
   const [notice, setNotice] = useState(null);
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
   const load = () => api.get('/users').then((res) => setUsers(res.data));
   useEffect(() => { load(); }, []);
   const filteredUsers = useMemo(() => {
@@ -29,13 +31,25 @@ export default function UserManagementPage() {
     members: users.filter((u) => u.role === 'Team Member').length
   }), [users]);
   async function createUser(payload) {
-    const { fullName, username, email, phone, password, accessCode, role, department, status } = payload;
-    const cleanPayload = { fullName, username, email, phone, password, accessCode, role, department, status };
-    if (editing) await api.put(`/users/${editing._id}`, cleanPayload);
-    else await api.post('/users', cleanPayload);
-    setShowForm(false);
-    setEditing(null);
-    load();
+    setError('');
+    setSaving(true);
+    try {
+      const { fullName, username, email, phone, password, accessCode, role, department, status } = payload;
+      const cleanPayload = { fullName, username, email, phone, password, accessCode, role, department, status };
+      if (editing) await api.put(`/users/${editing._id}`, cleanPayload);
+      else await api.post('/users', cleanPayload);
+      setNotice({
+        title: editing ? 'User updated' : 'User created',
+        lines: [`Name: ${fullName}`, `Username: ${username}`, `Access code: ${accessCode}`]
+      });
+      setShowForm(false);
+      setEditing(null);
+      load();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not save user. Check all required fields and try again.');
+    } finally {
+      setSaving(false);
+    }
   }
   async function setUserStatus(user, nextStatus) {
     await api.put(`/users/${user._id}`, { ...user, status: nextStatus, assignedEvents: undefined });
@@ -70,6 +84,17 @@ export default function UserManagementPage() {
     });
     load();
   }
+  async function disableUser(user) {
+    if (!window.confirm(`Disable ${user.fullName}? They will not be able to log in.`)) return;
+    await api.delete(`/users/${user._id}`);
+    load();
+  }
+  async function removeUser(user) {
+    if (!window.confirm(`Permanently remove ${user.fullName}? This removes the account from User Management.`)) return;
+    await api.delete(`/users/${user._id}/remove`);
+    setNotice({ title: 'User removed', lines: [`${user.fullName} was removed permanently.`] });
+    load();
+  }
   return (
     <div className="space-y-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -96,7 +121,12 @@ export default function UserManagementPage() {
           </div>
         </div>
       )}
-      {showForm && <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"><UserForm initial={editing || {}} onSubmit={createUser} /></div>}
+      {showForm && (
+        <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+          {error && <p className="mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
+          <UserForm initial={editing || {}} onSubmit={createUser} saving={saving} />
+        </div>
+      )}
       <div className="grid gap-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm md:grid-cols-3 md:p-4">
         <input placeholder="Search name, username, email, phone, department, access code" value={query} onChange={(e) => setQuery(e.target.value)} />
         <select value={role} onChange={(e) => setRole(e.target.value)}>
@@ -128,7 +158,8 @@ export default function UserManagementPage() {
               <button onClick={() => regenerateAccessCode(u)} className="secondary-btn text-brand">New code</button>
               {u.status !== 'Active' && <button onClick={() => setUserStatus(u, 'Active')} className="secondary-btn border-green-200 text-green-700">Activate</button>}
               {u.status !== 'Suspended' && <button onClick={() => setUserStatus(u, 'Suspended')} className="secondary-btn border-rose-200 text-rose-600">Suspend</button>}
-              {u.status !== 'Inactive' && <button onClick={() => api.delete(`/users/${u._id}`).then(load)} className="secondary-btn text-slate-600">Disable</button>}
+              {u.status !== 'Inactive' && <button onClick={() => disableUser(u)} className="secondary-btn text-slate-600">Disable</button>}
+              <button onClick={() => removeUser(u)} className="secondary-btn border-rose-200 text-rose-600">Remove</button>
             </div>
           </article>
         ))}
@@ -153,7 +184,8 @@ export default function UserManagementPage() {
                       <button onClick={() => regenerateAccessCode(u)} className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-semibold text-brand">New code</button>
                       {u.status !== 'Active' && <button onClick={() => setUserStatus(u, 'Active')} className="rounded-lg border border-green-200 px-2 py-1 text-xs font-semibold text-green-700">Activate</button>}
                       {u.status !== 'Suspended' && <button onClick={() => setUserStatus(u, 'Suspended')} className="rounded-lg border border-rose-200 px-2 py-1 text-xs font-semibold text-rose-600">Suspend</button>}
-                      {u.status !== 'Inactive' && <button onClick={() => api.delete(`/users/${u._id}`).then(load)} className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-semibold text-slate-600">Disable</button>}
+                      {u.status !== 'Inactive' && <button onClick={() => disableUser(u)} className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-semibold text-slate-600">Disable</button>}
+                      <button onClick={() => removeUser(u)} className="rounded-lg border border-rose-200 px-2 py-1 text-xs font-semibold text-rose-600">Remove</button>
                     </div>
                   </td>
                 </tr>
