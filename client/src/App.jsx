@@ -2,6 +2,7 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import Layout from './components/Layout.jsx';
 import { useAuth } from './context/AuthContext.jsx';
 import BossMonitoringDashboard from './pages/BossMonitoringDashboard.jsx';
+import CalendarPage from './pages/CalendarPage.jsx';
 import ChatPage from './pages/ChatPage.jsx';
 import DashboardPage from './pages/DashboardPage.jsx';
 import EventSelectionPage from './pages/EventSelectionPage.jsx';
@@ -32,6 +33,7 @@ export default function App() {
       <Route path="/first-login" element={<Protected><FirstLoginPage /></Protected>} />
       <Route element={<Protected><Layout /></Protected>}>
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/notes" element={<NotesPage />} />
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/events" element={<EventSelectionPage />} />

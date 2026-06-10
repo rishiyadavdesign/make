@@ -1,4 +1,4 @@
-import { BarChart3, CalendarDays, LayoutDashboard, LogOut, Menu, MessageCircle, NotebookText, Pin, Users } from 'lucide-react';
+import { BarChart3, CalendarCheck, CalendarDays, LayoutDashboard, LogOut, Menu, MessageCircle, NotebookText, Pin, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { api } from '../api/client.js';
@@ -11,6 +11,7 @@ function links(user) {
   const base = [
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/events', label: 'Events', icon: CalendarDays },
+    { to: '/calendar', label: 'Calendar', icon: CalendarCheck },
     { to: '/notes', label: 'Notes', icon: NotebookText },
     { to: '/chat', label: 'Chat', icon: MessageCircle }
   ];
@@ -84,8 +85,8 @@ export default function Layout() {
         <div className="p-3 pb-8 sm:p-4 lg:p-6"><Outlet /></div>
       </main>
       <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur lg:hidden">
-        <div className="grid grid-cols-4 gap-1">
-          {links(user).slice(0, 4).map(({ to, label, icon: Icon }) => (
+        <div className="grid grid-cols-5 gap-1">
+          {links(user).slice(0, 5).map(({ to, label, icon: Icon }) => (
             <NavLink key={to} to={to} className={({ isActive }) => `flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg text-[11px] font-semibold ${isActive ? 'bg-green-50 text-brand' : 'text-slate-500'}`}>
               <Icon size={19} />
               <span className="max-w-full truncate">{label}</span>

@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import AppNote from '../src/models/AppNote.js';
+import CalendarPlan from '../src/models/CalendarPlan.js';
 import Checklist from '../src/models/Checklist.js';
 import Equipment from '../src/models/Equipment.js';
 import Expense from '../src/models/Expense.js';
@@ -19,6 +20,7 @@ await mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/bps_e
 
 await Promise.all([
   AppNote.deleteMany({}),
+  CalendarPlan.deleteMany({}),
   User.deleteMany({}),
   Event.deleteMany({}),
   Task.deleteMany({}),
@@ -271,6 +273,39 @@ await AppNote.create([
     description: 'Keep spare batteries, tape, markers, extension boards, and rain cover in the event kit.',
     category: 'Idea',
     visibility: 'Shared',
+    createdBy: team._id
+  }
+]);
+
+await CalendarPlan.create([
+  {
+    title: 'Review event readiness dashboard',
+    description: 'Check active event progress, pending approvals, expenses, and equipment alerts.',
+    date: new Date('2026-07-01'),
+    startTime: '10:00',
+    category: 'Task',
+    status: 'Planned',
+    visibility: 'Personal',
+    createdBy: boss._id
+  },
+  {
+    title: 'Meerut T20 team planning',
+    description: 'Plan July crew allocation and vendor follow-ups.',
+    date: new Date('2026-07-05'),
+    startTime: '11:30',
+    category: 'Meeting',
+    status: 'Planned',
+    visibility: 'Shared',
+    createdBy: manager._id
+  },
+  {
+    title: 'Prepare event packing list',
+    description: 'Add monthly packing checklist items and equipment reminders.',
+    date: new Date('2026-07-08'),
+    startTime: '16:00',
+    category: 'Reminder',
+    status: 'Planned',
+    visibility: 'Personal',
     createdBy: team._id
   }
 ]);

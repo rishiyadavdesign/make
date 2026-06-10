@@ -15,6 +15,7 @@ export const endpoints = {
   users: '/users',
   events: '/events',
   appNotes: '/app-notes',
+  calendarPlans: '/calendar-plans',
   tasks: '/tasks',
   equipment: '/equipment',
   responsibilities: '/responsibilities',
