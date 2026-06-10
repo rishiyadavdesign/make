@@ -1,6 +1,13 @@
 import asyncHandler from 'express-async-handler';
 import User from '../models/User.js';
 import { signToken } from '../utils/tokens.js';
+import { normalizeFiles } from '../utils/fileStorage.js';
+
+function duplicateMessage(err) {
+  if (err?.code !== 11000) return null;
+  const field = Object.keys(err.keyPattern || err.keyValue || {})[0] || 'field';
+  return `${field} already exists. Use a different ${field}.`;
+}
 
 function sendAuth(res, user) {
   const plain = user.toObject();
@@ -43,12 +50,22 @@ export const updateProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
   if (!user) return res.status(404).json({ message: 'User not found' });
 
-  const allowed = ['fullName', 'phone', 'department'];
+  const allowed = ['fullName', 'username', 'email', 'phone', 'department', 'jobTitle', 'location', 'bio', 'emergencyContact'];
   allowed.forEach((field) => {
     if (req.body[field] !== undefined) user[field] = req.body[field];
   });
+  if (req.file) {
+    const [profilePhoto] = await normalizeFiles([req.file]);
+    user.profilePhoto = profilePhoto;
+  }
   user.profileCompleted = Boolean(user.fullName);
-  await user.save();
+  try {
+    await user.save();
+  } catch (err) {
+    const message = duplicateMessage(err);
+    if (message) return res.status(409).json({ message });
+    throw err;
+  }
 
   const fresh = await User.findById(user._id).select('-password').populate('assignedEvents', 'eventName date venue status');
   res.json(fresh);
