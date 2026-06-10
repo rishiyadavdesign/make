@@ -25,9 +25,9 @@ const statusClass = {
 };
 
 export function RoleBadge({ role }) {
-  return <span className={`inline-flex w-fit max-w-full items-center whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold leading-4 ${roleClass[role] || 'bg-slate-100 text-slate-700'}`}>{role}</span>;
+  return <span className={`inline-flex w-fit max-w-full items-center rounded-full px-2.5 py-1 text-[11px] font-bold leading-4 sm:text-xs ${roleClass[role] || 'bg-slate-100 text-slate-700'}`}><span className="truncate">{role}</span></span>;
 }
 
 export function StatusBadge({ status }) {
-  return <span className={`inline-flex w-fit max-w-full items-center whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold leading-4 ${statusClass[status] || 'bg-slate-100 text-slate-700'}`}>{status}</span>;
+  return <span className={`inline-flex w-fit max-w-full items-center rounded-full px-2.5 py-1 text-[11px] font-bold leading-4 sm:text-xs ${statusClass[status] || 'bg-slate-100 text-slate-700'}`}><span className="truncate">{status}</span></span>;
 }

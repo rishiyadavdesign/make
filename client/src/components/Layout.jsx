@@ -46,13 +46,13 @@ export default function Layout() {
   }, [location.pathname]);
 
   const nav = (
-    <aside className="flex h-full w-72 flex-col border-r border-slate-200 bg-white p-4">
+    <aside className="flex h-full w-[86vw] max-w-80 flex-col border-r border-slate-200 bg-white p-4 shadow-2xl shadow-slate-950/10 lg:w-72 lg:shadow-none">
       <div className="mb-5">
         <Link to="/dashboard" onClick={() => setOpen(false)} className="block rounded-lg px-1 py-1">
           <h1 className="text-xl font-black leading-6 tracking-normal text-slate-950">BPS Event Portal</h1>
           <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">Event Management Portal</p>
         </Link>
-        <Link to="/profile" onClick={() => setOpen(false)} className="mt-4 block rounded-lg border border-slate-100 bg-slate-50/70 p-3 hover:bg-green-50">
+        <Link to="/profile" onClick={() => setOpen(false)} className="mt-4 block rounded-2xl border border-slate-100 bg-slate-50/80 p-3 hover:bg-green-50">
           <div className="flex items-start gap-3">
             <div className="h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-green-100">
               {user.profilePhoto?.path ? <img src={fileUrl(user.profilePhoto)} alt={user.fullName} className="h-full w-full object-cover" /> : <div className="flex h-full w-full items-center justify-center text-sm font-black text-brand">{initialsFor(user.fullName)}</div>}
@@ -81,30 +81,31 @@ export default function Layout() {
           <p className="mt-1 line-clamp-2 text-xs text-slate-600">{pinnedEvent.venue}</p>
         </Link>
       )}
-      <button onClick={logout} className="mt-auto flex min-h-11 items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">
+      <button onClick={logout} className="mt-auto flex min-h-11 items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">
         <LogOut size={18} /> Logout
       </button>
     </aside>
   );
   return (
-    <div className="min-h-screen lg:flex">
+    <div className="min-h-screen bg-[#f6f8f7] lg:flex">
       <div className="hidden lg:block">{nav}</div>
-      {open && <div className="fixed inset-0 z-30 bg-black/30 lg:hidden" onClick={() => setOpen(false)}><div className="h-full" onClick={(e) => e.stopPropagation()}>{nav}</div></div>}
+      {open && <div className="fixed inset-0 z-30 bg-slate-950/40 backdrop-blur-sm lg:hidden" onClick={() => setOpen(false)}><div className="h-full" onClick={(e) => e.stopPropagation()}>{nav}</div></div>}
       <main className="min-w-0 flex-1 pb-28 lg:pb-0">
-        <header className="sticky top-0 z-20 flex min-h-14 items-center justify-between border-b border-slate-200 bg-white/95 px-3 py-2.5 backdrop-blur lg:px-6 lg:py-3">
-          <button className="rounded-lg p-2 hover:bg-slate-100 lg:hidden" onClick={() => setOpen(true)} aria-label="Open menu"><Menu size={21} /></button>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-slate-800 lg:hidden">{user.fullName}</p>
+        <header className="sticky top-0 z-20 flex min-h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-4 py-2.5 backdrop-blur lg:min-h-14 lg:px-6 lg:py-3">
+          <button className="inline-flex h-11 w-11 items-center justify-center rounded-2xl text-slate-800 hover:bg-slate-100 lg:hidden" onClick={() => setOpen(true)} aria-label="Open menu"><Menu size={23} /></button>
+          <div className="min-w-0 text-center lg:text-left">
+            <p className="truncate text-base font-black leading-5 text-slate-900 lg:hidden">Rishi BPS</p>
+            <p className="mt-0.5 hidden text-[11px] font-bold uppercase tracking-[0.14em] text-brand sm:block lg:hidden">Event Portal</p>
             <div className="hidden text-sm font-semibold text-slate-600 lg:block">Operations workspace</div>
           </div>
           <NotificationPanel />
         </header>
-        <div className="p-3 pb-8 sm:p-4 lg:p-6"><Outlet /></div>
+        <div className="mx-auto w-full max-w-[1500px] p-3 pb-8 sm:p-4 lg:p-6"><Outlet /></div>
       </main>
-      <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 px-2 pb-[max(0.55rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_rgba(15,23,42,0.10)] backdrop-blur lg:hidden">
         <div className="grid grid-cols-5 gap-1">
           {links(user).filter((item) => ['Dashboard', 'Events', 'Calendar', 'Chat', 'Profile'].includes(item.label)).map(({ to, label, icon: Icon }) => (
-            <NavLink key={to} to={to} className={({ isActive }) => `flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg text-[11px] font-semibold ${isActive ? 'bg-green-50 text-brand' : 'text-slate-500'}`}>
+            <NavLink key={to} to={to} className={({ isActive }) => `flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[11px] font-bold ${isActive ? 'bg-green-50 text-brand shadow-sm ring-1 ring-green-100' : 'text-slate-500'}`}>
               <Icon size={19} />
               <span className="max-w-full truncate">{label}</span>
             </NavLink>
