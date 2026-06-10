@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-label="BPS">
-  <rect width="160" height="160" rx="24" fill="#000"/>
-  <g fill="#fff" font-family="Arial Black, Arial, Helvetica, sans-serif" font-weight="900">
-    <text x="31" y="70" font-size="56" letter-spacing="-8">bP</text>
-    <text x="31" y="125" font-size="58" letter-spacing="-7">s</text>
-  </g>
-  <circle cx="103" cy="104" r="31" fill="#fff"/>
-  <path d="M82 111h31v31h-13v-18l-28 28-10-10 28-28H72v-13h31v10H82Z" fill="#000"/>
-</svg>

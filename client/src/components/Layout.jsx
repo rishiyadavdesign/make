@@ -33,12 +33,9 @@ export default function Layout() {
   const nav = (
     <aside className="flex h-full w-72 flex-col border-r border-slate-200 bg-white p-4">
       <div className="mb-6">
-        <Link to="/dashboard" onClick={() => setOpen(false)} className="flex items-center gap-3">
-          <img src="/bps-mark.svg" alt="Black Pepper Salt" className="h-12 w-12 rounded-lg bg-black" />
-          <div className="min-w-0">
-            <h1 className="text-lg font-bold leading-5">BPS Event Portal</h1>
-            <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Event Management Portal</p>
-          </div>
+        <Link to="/dashboard" onClick={() => setOpen(false)} className="block">
+          <h1 className="text-lg font-bold leading-5">BPS Event Portal</h1>
+          <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Event Management Portal</p>
         </Link>
         <div className="mt-3 flex items-center justify-between gap-2">
           <div>
