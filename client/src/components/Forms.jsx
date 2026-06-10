@@ -37,9 +37,16 @@ export function UserForm({ onSubmit, initial = {}, saving = false }) {
 
 export function EventForm({ onSubmit, users = [], initial = {} }) {
   const [form, setForm] = useState({ eventName: '', clientName: '', date: '', venue: '', reportingTime: '', description: '', status: 'Planning', assignedManager: '', teamMembers: [], importantInstructions: '', ...initial });
-  const managers = users.filter((u) => u.role === 'Project Manager');
-  const members = users.filter((u) => u.role === 'Team Member');
+  const managers = users.filter((u) => u.role === 'Project Manager' && u.status !== 'Inactive' && u.status !== 'Suspended');
+  const members = users.filter((u) => u.role === 'Team Member' && u.status !== 'Inactive' && u.status !== 'Suspended');
   const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
+  const teamMembers = Array.isArray(form.teamMembers) ? form.teamMembers.map(String) : [];
+  const toggleMember = (id) => {
+    const next = teamMembers.includes(String(id))
+      ? teamMembers.filter((memberId) => memberId !== String(id))
+      : [...teamMembers, String(id)];
+    setForm({ ...form, teamMembers: next });
+  };
   return (
     <form onSubmit={(e) => { e.preventDefault(); onSubmit(form); }} className="grid gap-3 md:grid-cols-2">
       <Field label="Event name"><input value={form.eventName} onChange={set('eventName')} required /></Field>
@@ -48,10 +55,35 @@ export function EventForm({ onSubmit, users = [], initial = {} }) {
       <Field label="Venue"><input value={form.venue} onChange={set('venue')} required /></Field>
       <Field label="Reporting time"><input value={form.reportingTime} onChange={set('reportingTime')} /></Field>
       <Field label="Status"><select value={form.status} onChange={set('status')}>{['Planning', 'Active', 'Completed', 'Cancelled'].map((s) => <option key={s}>{s}</option>)}</select></Field>
-      <Field label="Manager"><select value={form.assignedManager} onChange={set('assignedManager')}><option value="">Select</option>{managers.map((u) => <option key={u._id} value={u._id}>{u.fullName}</option>)}</select></Field>
-      <Field label="Team members"><select multiple value={form.teamMembers} onChange={(e) => setForm({ ...form, teamMembers: [...e.target.selectedOptions].map((o) => o.value) })}>{members.map((u) => <option key={u._id} value={u._id}>{u.fullName}</option>)}</select></Field>
+      <Field label="Manager"><select value={form.assignedManager} onChange={set('assignedManager')} required><option value="">Select manager</option>{managers.map((u) => <option key={u._id} value={u._id}>{u.fullName}</option>)}</select></Field>
       <Field label="Description"><textarea value={form.description} onChange={set('description')} /></Field>
       <Field label="Instructions"><textarea value={form.importantInstructions} onChange={set('importantInstructions')} /></Field>
+      <div className="space-y-2 md:col-span-2">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm font-medium text-slate-700">Assign team members</p>
+          <p className="text-xs font-medium text-slate-500">{teamMembers.length} selected</p>
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {members.map((member) => {
+            const selected = teamMembers.includes(String(member._id));
+            return (
+              <button
+                key={member._id}
+                type="button"
+                onClick={() => toggleMember(member._id)}
+                className={`min-h-16 rounded-lg border p-3 text-left ${selected ? 'border-brand bg-green-50 ring-2 ring-green-100' : 'border-slate-200 bg-white hover:bg-slate-50'}`}
+              >
+                <span className="block text-sm font-semibold text-slate-950">{member.fullName}</span>
+                <span className="block text-xs text-slate-500">{member.department || member.email || member.username}</span>
+                <span className={`mt-2 inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${selected ? 'bg-brand text-white' : 'bg-slate-100 text-slate-500'}`}>
+                  {selected ? 'Assigned' : 'Tap to assign'}
+                </span>
+              </button>
+            );
+          })}
+          {members.length === 0 && <p className="rounded-lg border border-dashed border-slate-200 p-3 text-sm text-slate-500">No active team members available. Add Team Member users first.</p>}
+        </div>
+      </div>
       <button className="primary-btn md:col-span-2">Save event</button>
     </form>
   );

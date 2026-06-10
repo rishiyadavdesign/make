@@ -1,5 +1,6 @@
 import asyncHandler from 'express-async-handler';
 import Event from '../models/Event.js';
+import Notification from '../models/Notification.js';
 import User from '../models/User.js';
 import { eventScopeQuery, canAccessEvent } from '../utils/scope.js';
 import { isBoss } from '../middleware/auth.js';
@@ -32,6 +33,7 @@ export const getEvent = asyncHandler(async (req, res) => {
 export const createEvent = asyncHandler(async (req, res) => {
   const event = await Event.create(req.body);
   await syncAssignments(event);
+  await notifyAssignedUsers(event, []);
   res.status(201).json(event);
 });
 
@@ -41,9 +43,11 @@ export const updateEvent = asyncHandler(async (req, res) => {
   if (!isBoss(req.user) && String(event.assignedManager) !== String(req.user._id)) {
     return res.status(403).json({ message: 'Forbidden' });
   }
+  const previousAssignedIds = assignedUserIds(event);
   Object.assign(event, req.body);
   await event.save();
-  await syncAssignments(event);
+  await syncAssignments(event, previousAssignedIds);
+  await notifyAssignedUsers(event, previousAssignedIds);
   res.json(event);
 });
 
@@ -63,7 +67,28 @@ export const pinEvent = asyncHandler(async (req, res) => {
   res.json({ pinnedEvent: user.pinnedEvent || null });
 });
 
-async function syncAssignments(event) {
-  const ids = [event.assignedManager, ...(event.teamMembers || [])].filter(Boolean);
+function assignedUserIds(event) {
+  return [event.assignedManager, ...(event.teamMembers || [])].filter(Boolean).map((id) => String(id));
+}
+
+async function syncAssignments(event, previousIds = []) {
+  const ids = assignedUserIds(event);
+  const removedIds = previousIds.filter((id) => !ids.includes(String(id)));
   await User.updateMany({ _id: { $in: ids } }, { $addToSet: { assignedEvents: event._id } });
+  if (removedIds.length) {
+    await User.updateMany({ _id: { $in: removedIds } }, { $pull: { assignedEvents: event._id } });
+  }
+}
+
+async function notifyAssignedUsers(event, previousIds = []) {
+  const previous = new Set(previousIds.map(String));
+  const nextIds = assignedUserIds(event).filter((id) => !previous.has(String(id)));
+  if (!nextIds.length) return;
+  await Promise.all(nextIds.map((userId) => Notification.create({
+    userId,
+    eventId: event._id,
+    title: 'Event assigned',
+    message: `You have been assigned to ${event.eventName}.`,
+    type: 'Event'
+  })));
 }

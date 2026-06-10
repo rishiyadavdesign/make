@@ -314,7 +314,24 @@ function Overview({ event, team, canManage, reload }) {
       </div>
       <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
         <h3 className="font-semibold">Team</h3>
-        <div className="mt-3 space-y-2">{team.map((person) => <div key={person._id} className="rounded-lg bg-slate-50 p-3"><p className="text-sm font-medium">{person.fullName}</p><p className="text-xs text-slate-500">{person.role}</p></div>)}</div>
+        <div className="mt-3 space-y-3">
+          {event.assignedManager && (
+            <div className="rounded-lg border border-green-100 bg-green-50 p-3">
+              <p className="text-xs font-semibold uppercase tracking-normal text-brand">Project Manager</p>
+              <p className="mt-1 text-sm font-semibold">{event.assignedManager.fullName}</p>
+            </div>
+          )}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-normal text-slate-500">Team Members</p>
+            {(event.teamMembers || []).map((person) => (
+              <div key={person._id} className="rounded-lg bg-slate-50 p-3">
+                <p className="text-sm font-medium">{person.fullName}</p>
+                <p className="text-xs text-slate-500">{person.department || person.role}</p>
+              </div>
+            ))}
+            {(event.teamMembers || []).length === 0 && <p className="rounded-lg border border-dashed border-slate-200 p-3 text-sm text-slate-500">No team members assigned.</p>}
+          </div>
+        </div>
       </div>
       <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:p-4 lg:col-span-3">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
