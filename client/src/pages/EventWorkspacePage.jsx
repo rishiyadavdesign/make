@@ -60,6 +60,7 @@ export default function EventWorkspacePage() {
   const [allUsers, setAllUsers] = useState([]);
   const [data, setData] = useState({ tasks: [], equipment: [], responsibilities: [], checklist: [], notes: [], submissions: [], expenses: [] });
   const team = useMemo(() => event ? [event.assignedManager, ...(event.teamMembers || [])].filter(Boolean) : [], [event]);
+  const eventMembers = useMemo(() => event?.teamMembers || [], [event]);
   const canManage = !isMember(user);
   const canPin = isBoss(user) || isManager(user);
 
@@ -149,10 +150,10 @@ export default function EventWorkspacePage() {
 
       {editingEvent && <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"><EventForm users={isBoss(user) ? allUsers : team} initial={{ ...event, assignedManager: event.assignedManager?._id || '', teamMembers: (event.teamMembers || []).map((u) => u._id) }} onSubmit={saveEvent} /></div>}
       {tab === 'overview' && <Overview event={event} team={team} canManage={canManage} reload={load} />}
-      {tab === 'tasks' && <Tasks tasks={data.tasks} team={team} user={user} canManage={canManage} eventId={id} create={create('tasks')} update={update('tasks')} remove={remove('tasks')} />}
-      {tab === 'equipment' && <Equipment items={data.equipment} team={team} canManage={canManage} eventId={id} create={create('equipment')} update={update('equipment')} remove={remove('equipment')} />}
-      {tab === 'responsibilities' && <SimpleManager title="Responsibilities" resource="responsibilities" items={data.responsibilities} team={team} eventId={id} canManage={canManage} reload={load} />}
-      {tab === 'checklist' && <Checklist items={data.checklist} team={team} eventId={id} canManage={canManage} reload={load} />}
+      {tab === 'tasks' && <Tasks tasks={data.tasks} team={eventMembers} user={user} canManage={canManage} eventId={id} create={create('tasks')} update={update('tasks')} remove={remove('tasks')} onManageTeam={() => setEditingEvent(true)} />}
+      {tab === 'equipment' && <Equipment items={data.equipment} team={eventMembers} canManage={canManage} eventId={id} create={create('equipment')} update={update('equipment')} remove={remove('equipment')} onManageTeam={() => setEditingEvent(true)} />}
+      {tab === 'responsibilities' && <SimpleManager title="Responsibilities" resource="responsibilities" items={data.responsibilities} team={eventMembers} eventId={id} canManage={canManage} reload={load} onManageTeam={() => setEditingEvent(true)} />}
+      {tab === 'checklist' && <Checklist items={data.checklist} team={eventMembers} eventId={id} canManage={canManage} reload={load} onManageTeam={() => setEditingEvent(true)} />}
       {tab === 'notes' && <Notes items={data.notes} eventId={id} canManage={canManage} reload={load} />}
       {tab === 'submissions' && <Submissions items={data.submissions} tasks={data.tasks} eventId={id} user={user} canReview={canManage || isBoss(user)} canManage={canManage} reload={load} />}
       {tab === 'expenses' && <Expenses items={data.expenses} eventId={id} user={user} canReview={isBoss(user)} reload={load} />}
@@ -387,8 +388,19 @@ function InfoRow({ label, value }) {
   return <div><dt className="text-slate-500">{label}</dt><dd className="font-medium">{value}</dd></div>;
 }
 
-function Tasks({ tasks, team, user, canManage, eventId, create, update, remove }) {
-  return <div className="space-y-4">{canManage && <TaskForm eventId={eventId} users={team} onSubmit={create} />}<div className="grid gap-4 lg:grid-cols-2">{tasks.map((task) => <div key={task._id} className="space-y-2"><TaskCard task={task} team={team} canManage={canManage} onUpdate={update} onDelete={remove} /><TaskDetails task={task} user={user} onUpdate={update} /></div>)}</div></div>;
+function AssignmentGate({ title = 'Assign team members first', onManageTeam }) {
+  return (
+    <div className="rounded-lg border border-dashed border-green-200 bg-green-50 p-4">
+      <h3 className="font-semibold text-slate-950">{title}</h3>
+      <p className="mt-1 text-sm text-slate-600">Add team members to this event first. After that, you can assign tasks, equipment, responsibilities, and checklist items to a particular member.</p>
+      <button type="button" onClick={onManageTeam} className="primary-btn mt-3">Add team members</button>
+    </div>
+  );
+}
+
+function Tasks({ tasks, team, user, canManage, eventId, create, update, remove, onManageTeam }) {
+  const needsTeam = canManage && team.length === 0;
+  return <div className="space-y-4">{needsTeam ? <AssignmentGate onManageTeam={onManageTeam} /> : canManage && <TaskForm eventId={eventId} users={team} onSubmit={create} />}<div className="grid gap-4 lg:grid-cols-2">{tasks.map((task) => <div key={task._id} className="space-y-2"><TaskCard task={task} team={team} canManage={canManage && team.length > 0} onUpdate={update} onDelete={remove} /><TaskDetails task={task} user={user} onUpdate={update} /></div>)}</div></div>;
 }
 
 function TaskDetails({ task, user, onUpdate }) {
@@ -417,11 +429,12 @@ function TaskDetails({ task, user, onUpdate }) {
   );
 }
 
-function Equipment({ items, team, canManage, eventId, create, update, remove }) {
-  return <div className="space-y-4">{canManage && <EquipmentForm eventId={eventId} users={team} onSubmit={create} />}<div className="grid gap-4 lg:grid-cols-2">{items.map((item) => <EquipmentCard key={item._id} item={item} team={team} canManage={canManage} onUpdate={update} onDelete={remove} />)}</div></div>;
+function Equipment({ items, team, canManage, eventId, create, update, remove, onManageTeam }) {
+  const needsTeam = canManage && team.length === 0;
+  return <div className="space-y-4">{needsTeam ? <AssignmentGate onManageTeam={onManageTeam} /> : canManage && <EquipmentForm eventId={eventId} users={team} onSubmit={create} />}<div className="grid gap-4 lg:grid-cols-2">{items.map((item) => <EquipmentCard key={item._id} item={item} team={team} canManage={canManage && team.length > 0} onUpdate={update} onDelete={remove} />)}</div></div>;
 }
 
-function SimpleManager({ title, resource, items, team, eventId, canManage, reload }) {
+function SimpleManager({ title, resource, items, team, eventId, canManage, reload, onManageTeam }) {
   const [form, setForm] = useState({ eventId, title: '', assignedTo: '', description: '' });
   async function submit(e) {
     e.preventDefault();
@@ -433,15 +446,16 @@ function SimpleManager({ title, resource, items, team, eventId, canManage, reloa
     await api.delete(`/${resource}/${id}`);
     reload();
   }
+  const needsTeam = canManage && team.length === 0;
   return (
     <div className="space-y-4">
-      {canManage && <form onSubmit={submit} className="grid gap-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm md:grid-cols-2 md:p-4"><input placeholder={`${title} title`} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required /><select value={form.assignedTo} onChange={(e) => setForm({ ...form, assignedTo: e.target.value })} required><option value="">Assign to</option>{team.map((u) => <option key={u._id} value={u._id}>{u.fullName}</option>)}</select><textarea placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /><button className="primary-btn">Add</button></form>}
+      {needsTeam ? <AssignmentGate title={`Assign team members before adding ${title.toLowerCase()}`} onManageTeam={onManageTeam} /> : canManage && <form onSubmit={submit} className="grid gap-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm md:grid-cols-2 md:p-4"><input placeholder={`${title} title`} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required /><select value={form.assignedTo} onChange={(e) => setForm({ ...form, assignedTo: e.target.value })} required><option value="">Assign to</option>{team.map((u) => <option key={u._id} value={u._id}>{u.fullName}</option>)}</select><textarea placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /><button className="primary-btn">Add</button></form>}
       <div className="grid gap-3 lg:grid-cols-2">{items.map((item) => <div key={item._id} className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:p-4"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><h3 className="font-semibold">{item.title}</h3><p className="text-sm text-slate-500">{item.assignedTo?.fullName}</p></div>{canManage && <button onClick={() => remove(item._id)} className="rounded-lg p-2 text-rose-600 hover:bg-rose-50" title="Delete"><Trash2 size={16} /></button>}</div><p className="mt-2 text-sm text-slate-600">{item.description}</p></div>)}</div>
     </div>
   );
 }
 
-function Checklist({ items, team, eventId, canManage, reload }) {
+function Checklist({ items, team, eventId, canManage, reload, onManageTeam }) {
   const [form, setForm] = useState({ eventId, section: 'Before Event', title: '', assignedTo: '' });
   async function submit(e) {
     e.preventDefault();
@@ -456,9 +470,10 @@ function Checklist({ items, team, eventId, canManage, reload }) {
     await api.delete(`/checklist/${id}`);
     reload();
   }
+  const needsTeam = canManage && team.length === 0;
   return (
     <div className="space-y-4">
-      {canManage && <form onSubmit={submit} className="grid gap-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm md:grid-cols-4 md:p-4"><select value={form.section} onChange={(e) => setForm({ ...form, section: e.target.value })}>{['Before Event', 'During Event', 'After Event'].map((s) => <option key={s}>{s}</option>)}</select><input placeholder="Checklist item" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required /><select value={form.assignedTo} onChange={(e) => setForm({ ...form, assignedTo: e.target.value })} required><option value="">Assign to</option>{team.map((u) => <option key={u._id} value={u._id}>{u.fullName}</option>)}</select><button className="primary-btn">Add item</button></form>}
+      {needsTeam ? <AssignmentGate title="Assign team members before adding checklist items" onManageTeam={onManageTeam} /> : canManage && <form onSubmit={submit} className="grid gap-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm md:grid-cols-4 md:p-4"><select value={form.section} onChange={(e) => setForm({ ...form, section: e.target.value })}>{['Before Event', 'During Event', 'After Event'].map((s) => <option key={s}>{s}</option>)}</select><input placeholder="Checklist item" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required /><select value={form.assignedTo} onChange={(e) => setForm({ ...form, assignedTo: e.target.value })} required><option value="">Assign to</option>{team.map((u) => <option key={u._id} value={u._id}>{u.fullName}</option>)}</select><button className="primary-btn">Add item</button></form>}
       <div className="grid gap-3 lg:grid-cols-3">{items.map((item) => <div key={item._id} className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:p-4"><button onClick={() => toggle(item)} className="block min-h-16 w-full text-left hover:text-brand"><p className="text-xs font-semibold text-slate-500">{item.section}</p><p className={`mt-1 text-sm font-medium ${item.completed ? 'line-through text-slate-400' : ''}`}>{item.title}</p><p className="text-xs text-slate-500">{item.assignedTo?.fullName}</p></button>{canManage && <button onClick={() => remove(item._id)} className="mt-3 flex min-h-9 items-center gap-1 text-xs font-semibold text-rose-600"><Trash2 size={13} /> Delete</button>}</div>)}</div>
     </div>
   );
