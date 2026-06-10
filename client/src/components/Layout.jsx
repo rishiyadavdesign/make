@@ -71,8 +71,8 @@ export default function Layout() {
     <div className="min-h-screen lg:flex">
       <div className="hidden lg:block">{nav}</div>
       {open && <div className="fixed inset-0 z-30 bg-black/30 lg:hidden" onClick={() => setOpen(false)}><div className="h-full" onClick={(e) => e.stopPropagation()}>{nav}</div></div>}
-      <main className="min-w-0 flex-1 pb-20 lg:pb-0">
-        <header className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-200 bg-white/95 px-3 py-2.5 backdrop-blur lg:px-6 lg:py-3">
+      <main className="min-w-0 flex-1 pb-28 lg:pb-0">
+        <header className="sticky top-0 z-20 flex min-h-14 items-center justify-between border-b border-slate-200 bg-white/95 px-3 py-2.5 backdrop-blur lg:px-6 lg:py-3">
           <button className="rounded-lg p-2 hover:bg-slate-100 lg:hidden" onClick={() => setOpen(true)} aria-label="Open menu"><Menu size={21} /></button>
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-slate-800 lg:hidden">{user.fullName}</p>
@@ -80,7 +80,7 @@ export default function Layout() {
           </div>
           <NotificationPanel />
         </header>
-        <div className="p-3 sm:p-4 lg:p-6"><Outlet /></div>
+        <div className="p-3 pb-8 sm:p-4 lg:p-6"><Outlet /></div>
       </main>
       <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur lg:hidden">
         <div className="grid grid-cols-4 gap-1">

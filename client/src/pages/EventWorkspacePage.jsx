@@ -124,24 +124,24 @@ export default function EventWorkspacePage() {
 
   if (!event) return <div className="text-sm text-slate-500">Loading event workspace...</div>;
   return (
-    <div className="space-y-4 sm:space-y-5">
+    <div className="space-y-3 pb-4 sm:space-y-5">
       <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
-            <h2 className="page-title break-words">{event.eventName}</h2>
-            <p className="page-subtitle">{event.clientName} - {event.venue}</p>
+            <h2 className="break-words text-[1.35rem] font-bold leading-tight text-slate-950 sm:text-2xl">{event.eventName}</h2>
+            <p className="mt-1 break-words text-sm leading-5 text-slate-500">{event.clientName} - {event.venue}</p>
           </div>
-          <div className="mobile-action-grid lg:justify-end">
+          <div className="grid grid-cols-2 gap-2 lg:flex lg:flex-wrap lg:justify-end">
             <StatusBadge status={event.status} />
             {event.isPinnedForMe && <StatusBadge status="Pinned" />}
-            {canPin && <button onClick={pinEvent} className="secondary-btn"><Pin size={16} /> {event.isPinnedForMe ? 'Unpin' : 'Pin main'}</button>}
+            {canPin && <button onClick={pinEvent} className="secondary-btn min-h-11"><Pin size={16} /> {event.isPinnedForMe ? 'Unpin' : 'Pin main'}</button>}
             {canManage && <button onClick={() => setEditingEvent(!editingEvent)} className="secondary-btn">Edit</button>}
             {isBoss(user) && <button onClick={deleteEvent} className="inline-flex min-h-10 items-center justify-center rounded-lg bg-rose-600 px-3 py-2 text-sm font-semibold text-white">Delete</button>}
           </div>
         </div>
         <div className="hide-scrollbar -mx-3 mt-4 flex snap-x gap-2 overflow-x-auto px-3 pb-1 sm:mx-0 sm:px-0">
           {tabs.map(([key, label, Icon]) => (
-            <button key={key} onClick={() => setTab(key)} className={`flex min-h-10 shrink-0 snap-start items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold ${tab === key ? 'bg-green-50 text-brand' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
+            <button key={key} onClick={() => setTab(key)} className={`flex min-h-10 min-w-[6.6rem] shrink-0 snap-start items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold ${tab === key ? 'bg-green-50 text-brand' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
               <Icon size={16} /> {label}
             </button>
           ))}
@@ -385,7 +385,7 @@ function Overview({ event, team, canManage, reload }) {
 }
 
 function InfoRow({ label, value }) {
-  return <div><dt className="text-slate-500">{label}</dt><dd className="font-medium">{value}</dd></div>;
+  return <div className="min-w-0"><dt className="text-slate-500">{label}</dt><dd className="break-words font-medium">{value}</dd></div>;
 }
 
 function AssignmentGate({ title = 'Assign team members first', onManageTeam }) {
