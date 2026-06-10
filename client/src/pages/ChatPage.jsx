@@ -1,4 +1,4 @@
-import { ArrowLeft, Mic, MessageCircle, Paperclip, Search, SendHorizonal, Smile, Square, UsersRound, X } from 'lucide-react';
+import { ArrowLeft, ImagePlus, Mic, MessageCircle, Paperclip, Search, SendHorizonal, Smile, Square, UsersRound, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../api/client.js';
 import { RoleBadge } from '../components/Badges.jsx';
@@ -33,6 +33,7 @@ export default function ChatPage() {
   const scroller = useRef(null);
   const recorder = useRef(null);
   const chunks = useRef([]);
+  const imageInput = useRef(null);
   const fileInput = useRef(null);
   const activeContact = useMemo(() => contacts.find((contact) => contact._id === activeId), [contacts, activeId]);
   const filteredContacts = useMemo(() => {
@@ -111,6 +112,7 @@ export default function ChatPage() {
       setMessages((current) => current.map((item) => item._id === tempId ? data : item));
       loadContacts().catch(() => {});
     } catch (err) {
+      setRecordingError(err.response?.data?.message || err.message || 'Could not send attachment.');
       setMessages((current) => current.map((item) => item._id === tempId ? { ...item, failed: true, pending: false } : item));
     } finally {
       setSending(false);
@@ -118,7 +120,14 @@ export default function ChatPage() {
   }
 
   function addFiles(list) {
-    setFiles((current) => [...current, ...Array.from(list || [])].slice(0, 5));
+    const selected = Array.from(list || []);
+    const tooLarge = selected.find((file) => file.size > 25 * 1024 * 1024);
+    if (tooLarge) {
+      setRecordingError('Image/file is too large. Maximum size is 25 MB.');
+      return;
+    }
+    setRecordingError('');
+    setFiles((current) => [...current, ...selected].slice(0, 5));
   }
 
   function removeFile(index) {
@@ -270,14 +279,19 @@ export default function ChatPage() {
               </div>
             )}
             {recordingError && <p className="mb-2 rounded-lg bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">{recordingError}</p>}
-            <div className="grid grid-cols-[auto_auto_1fr_auto_auto] gap-2">
+            <div className="mb-2 flex items-center gap-2 overflow-x-auto pb-1">
               <button type="button" disabled={!activeContact} onClick={() => setEmojiOpen((value) => !value)} className="secondary-btn min-w-11 px-3" title="Emoji"><Smile size={18} /></button>
-              <button type="button" disabled={!activeContact} onClick={() => fileInput.current?.click()} className="secondary-btn min-w-11 px-3" title="Attach image/file"><Paperclip size={18} /></button>
-              <input value={body} onChange={(e) => setBody(e.target.value)} disabled={!activeContact} placeholder={activeContact ? 'Type a message...' : 'Select a contact first'} />
-              <input ref={fileInput} type="file" accept="image/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx" multiple className="hidden" onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
+              <button type="button" disabled={!activeContact} onClick={() => imageInput.current?.click()} className="secondary-btn min-w-11 px-3" title="Add image"><ImagePlus size={18} /></button>
+              <button type="button" disabled={!activeContact} onClick={() => fileInput.current?.click()} className="secondary-btn min-w-11 px-3" title="Attach file"><Paperclip size={18} /></button>
               <button type="button" disabled={!activeContact} onClick={recording ? stopRecording : startRecording} className={`secondary-btn min-w-11 px-3 ${recording ? 'border-rose-200 bg-rose-50 text-rose-600' : ''}`} title={recording ? 'Stop recording' : 'Record voice'}>
                 {recording ? <Square size={17} /> : <Mic size={18} />}
               </button>
+              {recording && <span className="whitespace-nowrap rounded-full bg-rose-50 px-3 py-2 text-xs font-bold text-rose-600">Recording...</span>}
+              <input ref={imageInput} type="file" accept="image/*,.heic,.heif" multiple className="hidden" onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
+              <input ref={fileInput} type="file" accept="image/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.heic,.heif" multiple className="hidden" onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
+            </div>
+            <div className="grid grid-cols-[1fr_auto] gap-2">
+              <input value={body} onChange={(e) => setBody(e.target.value)} disabled={!activeContact} placeholder={activeContact ? 'Type a message...' : 'Select a contact first'} />
               <button disabled={!activeContact || (!body.trim() && files.length === 0) || sending} className="inline-flex min-h-11 min-w-12 items-center justify-center rounded-lg bg-brand px-3 text-sm font-semibold text-white shadow-sm hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 sm:min-w-24">
                 <SendHorizonal size={18} />
                 <span className="hidden sm:inline">Send</span>
