@@ -28,4 +28,8 @@ const expenseSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+expenseSchema.index({ eventId: 1, createdAt: -1 });
+expenseSchema.index({ submittedBy: 1, status: 1 });
+expenseSchema.index({ status: 1, spentOn: -1 });
+
 export default mongoose.model('Expense', expenseSchema);

@@ -15,4 +15,8 @@ const noteSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+noteSchema.index({ eventId: 1, createdAt: -1 });
+noteSchema.index({ createdBy: 1 });
+noteSchema.index({ type: 1 });
+
 export default mongoose.model('Note', noteSchema);

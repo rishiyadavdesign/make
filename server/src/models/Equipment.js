@@ -16,4 +16,8 @@ const equipmentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+equipmentSchema.index({ eventId: 1, createdAt: -1 });
+equipmentSchema.index({ responsiblePerson: 1, status: 1 });
+equipmentSchema.index({ eventId: 1, responsiblePerson: 1 });
+
 export default mongoose.model('Equipment', equipmentSchema);

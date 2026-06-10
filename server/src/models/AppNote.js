@@ -19,4 +19,8 @@ const appNoteSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+appNoteSchema.index({ createdBy: 1, updatedAt: -1 });
+appNoteSchema.index({ visibility: 1, updatedAt: -1 });
+appNoteSchema.index({ category: 1 });
+
 export default mongoose.model('AppNote', appNoteSchema);

@@ -2,7 +2,8 @@ import axios from 'axios';
 
 const defaultBaseURL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5001/api' : '/api');
 export const api = axios.create({
-  baseURL: defaultBaseURL
+  baseURL: defaultBaseURL,
+  timeout: 45000
 });
 
 api.interceptors.request.use((config) => {
@@ -10,6 +11,16 @@ api.interceptors.request.use((config) => {
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.code === 'ECONNABORTED') {
+      error.message = 'Request timed out. The server may still be waking up.';
+    }
+    return Promise.reject(error);
+  }
+);
 
 export const endpoints = {
   users: '/users',

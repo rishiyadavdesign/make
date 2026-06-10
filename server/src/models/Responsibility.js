@@ -10,4 +10,8 @@ const responsibilitySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+responsibilitySchema.index({ eventId: 1, createdAt: -1 });
+responsibilitySchema.index({ assignedTo: 1 });
+responsibilitySchema.index({ eventId: 1, assignedTo: 1 });
+
 export default mongoose.model('Responsibility', responsibilitySchema);

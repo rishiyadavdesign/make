@@ -14,4 +14,8 @@ const submissionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+submissionSchema.index({ eventId: 1, createdAt: -1 });
+submissionSchema.index({ submittedBy: 1, status: 1 });
+submissionSchema.index({ taskId: 1 });
+
 export default mongoose.model('Submission', submissionSchema);

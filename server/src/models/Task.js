@@ -36,4 +36,9 @@ const taskSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+taskSchema.index({ eventId: 1, createdAt: -1 });
+taskSchema.index({ assignedTo: 1, status: 1 });
+taskSchema.index({ eventId: 1, assignedTo: 1 });
+taskSchema.index({ deadline: 1 });
+
 export default mongoose.model('Task', taskSchema);

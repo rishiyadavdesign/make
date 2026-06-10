@@ -27,4 +27,9 @@ const calendarPlanSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+calendarPlanSchema.index({ date: 1, startTime: 1 });
+calendarPlanSchema.index({ createdBy: 1, date: 1 });
+calendarPlanSchema.index({ visibility: 1, date: 1 });
+calendarPlanSchema.index({ status: 1, date: 1 });
+
 export default mongoose.model('CalendarPlan', calendarPlanSchema);

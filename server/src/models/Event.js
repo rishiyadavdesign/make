@@ -30,4 +30,8 @@ const eventSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+eventSchema.index({ status: 1, date: 1 });
+eventSchema.index({ assignedManager: 1, date: 1 });
+eventSchema.index({ teamMembers: 1, date: 1 });
+
 export default mongoose.model('Event', eventSchema);

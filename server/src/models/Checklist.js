@@ -11,4 +11,8 @@ const checklistSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+checklistSchema.index({ eventId: 1, section: 1 });
+checklistSchema.index({ assignedTo: 1, completed: 1 });
+checklistSchema.index({ eventId: 1, assignedTo: 1 });
+
 export default mongoose.model('Checklist', checklistSchema);
