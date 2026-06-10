@@ -22,6 +22,17 @@ function links(user) {
   return base;
 }
 
+function fileUrl(file) {
+  if (!file?.path) return '';
+  if (/^https?:\/\//i.test(file.path)) return file.path;
+  const base = (api.defaults.baseURL || '').replace(/\/api\/?$/, '');
+  return `${base}/${file.path}`;
+}
+
+function initialsFor(name) {
+  return String(name || 'User').split(' ').filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase();
+}
+
 export default function Layout() {
   const { user, logout } = useAuth();
   const location = useLocation();
@@ -36,36 +47,41 @@ export default function Layout() {
 
   const nav = (
     <aside className="flex h-full w-72 flex-col border-r border-slate-200 bg-white p-4">
-      <div className="mb-6">
-        <Link to="/dashboard" onClick={() => setOpen(false)} className="block">
-          <h1 className="text-lg font-bold leading-5">BPS Event Portal</h1>
-          <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Event Management Portal</p>
+      <div className="mb-5">
+        <Link to="/dashboard" onClick={() => setOpen(false)} className="block rounded-lg px-1 py-1">
+          <h1 className="text-xl font-black leading-6 tracking-normal text-slate-950">BPS Event Portal</h1>
+          <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">Event Management Portal</p>
         </Link>
-        <Link to="/profile" onClick={() => setOpen(false)} className="mt-3 flex items-center justify-between gap-2 rounded-lg p-2 hover:bg-slate-50">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold leading-5">{user.fullName}</p>
-            <p className="text-xs text-slate-500">{user.department || 'BPS Team'}</p>
+        <Link to="/profile" onClick={() => setOpen(false)} className="mt-4 block rounded-lg border border-slate-100 bg-slate-50/70 p-3 hover:bg-green-50">
+          <div className="flex items-start gap-3">
+            <div className="h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-green-100">
+              {user.profilePhoto?.path ? <img src={fileUrl(user.profilePhoto)} alt={user.fullName} className="h-full w-full object-cover" /> : <div className="flex h-full w-full items-center justify-center text-sm font-black text-brand">{initialsFor(user.fullName)}</div>}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-bold leading-5 text-slate-950">{user.fullName}</p>
+              <p className="line-clamp-2 text-xs leading-5 text-slate-500">{user.jobTitle || user.department || 'BPS Team'}</p>
+              <div className="mt-2"><RoleBadge role={user.role} /></div>
+            </div>
           </div>
-          <RoleBadge role={user.role} />
         </Link>
       </div>
-      <nav className="space-y-1">
+      <nav className="space-y-1.5">
         {links(user).map(({ to, label, icon: Icon }) => (
-          <NavLink key={to} to={to} onClick={() => setOpen(false)} className={({ isActive }) => `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium ${isActive ? 'bg-green-50 text-brand' : 'text-slate-600 hover:bg-slate-50'}`}>
-            <Icon size={18} /> {label}
+          <NavLink key={to} to={to} onClick={() => setOpen(false)} className={({ isActive }) => `flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold ${isActive ? 'bg-green-50 text-brand shadow-sm ring-1 ring-green-100' : 'text-slate-600 hover:bg-slate-50'}`}>
+            <Icon className="shrink-0" size={18} /> <span className="truncate">{label}</span>
           </NavLink>
         ))}
       </nav>
       {pinnedEvent && (
-        <Link to={`/events/${pinnedEvent._id}`} onClick={() => setOpen(false)} className="mt-5 block rounded-lg border border-green-100 bg-green-50 p-3 hover:bg-green-100">
-          <div className="flex items-center gap-2 text-xs font-bold uppercase text-brand">
+        <Link to={`/events/${pinnedEvent._id}`} onClick={() => setOpen(false)} className="mt-5 block rounded-lg border border-green-100 bg-green-50 p-3 shadow-sm hover:bg-green-100">
+          <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.12em] text-brand">
             <Pin size={14} /> Pinned Event
           </div>
-          <p className="mt-2 text-sm font-semibold text-slate-900">{pinnedEvent.eventName}</p>
+          <p className="mt-3 line-clamp-2 text-base font-bold leading-5 text-slate-950">{pinnedEvent.eventName}</p>
           <p className="mt-1 line-clamp-2 text-xs text-slate-600">{pinnedEvent.venue}</p>
         </Link>
       )}
-      <button onClick={logout} className="mt-auto flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">
+      <button onClick={logout} className="mt-auto flex min-h-11 items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">
         <LogOut size={18} /> Logout
       </button>
     </aside>
