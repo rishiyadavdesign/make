@@ -24,8 +24,8 @@ export default function LoginPage() {
   return (
     <div className="grid min-h-screen place-items-center bg-slate-100 px-4">
       <form onSubmit={submit} className="w-full max-w-md rounded-lg bg-white p-6 shadow-sm">
-        <div>
-          <img src="/bps-logo.svg" alt="Black Pepper Salt" className="h-auto w-56 max-w-full rounded-lg bg-black" />
+        <div className="text-center">
+          <img src="/bps-logo.svg" alt="Black Pepper Salt" className="mx-auto h-auto w-36 rounded-lg bg-black sm:w-40" />
           <h1 className="mt-5 text-2xl font-bold leading-7 text-slate-950">BPS Event Management Portal</h1>
           <p className="mt-2 text-sm leading-6 text-slate-500">Use credentials or access code provided by Boss/Admin.</p>
         </div>

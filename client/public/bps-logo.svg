@@ -1,18 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 180" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" role="img" aria-labelledby="title desc">
   <title id="title">Black Pepper Salt logo</title>
-  <desc id="desc">BPS symbol with black pepper salt wordmark.</desc>
-  <rect width="560" height="180" rx="28" fill="#000"/>
-  <g transform="translate(30 22)">
+  <desc id="desc">BPS mark with black pepper salt text stacked below on black background.</desc>
+  <rect width="640" height="640" fill="#000"/>
+  <g transform="translate(210 104)">
     <g fill="#fff" font-family="Arial Black, Arial, Helvetica, sans-serif" font-weight="900">
-      <text x="0" y="52" font-size="55" letter-spacing="-8">bP</text>
-      <text x="0" y="108" font-size="58" letter-spacing="-7">s</text>
+      <text x="0" y="102" font-size="126" letter-spacing="-18">bP</text>
+      <text x="2" y="218" font-size="132" letter-spacing="-15">s</text>
     </g>
-    <circle cx="76" cy="88" r="31" fill="#fff"/>
-    <path d="M55 95h31v31H73v-18l-28 28-10-10 28-28H45V85h31v10H55Z" fill="#000"/>
+    <circle cx="157" cy="167" r="66" fill="#fff"/>
+    <path d="M112 183h66v66h-28v-38l-61 61-21-21 61-61H91v-28h66v21h-45Z" fill="#000"/>
   </g>
   <g fill="#fff" font-family="Arial, Helvetica, sans-serif">
-    <text x="172" y="74" font-size="33" font-weight="800" letter-spacing="8">black</text>
-    <text x="172" y="113" font-size="33" font-weight="800" letter-spacing="8">pepper</text>
-    <text x="173" y="151" font-size="30" font-weight="300" letter-spacing="10">salt</text>
+    <text x="226" y="422" font-size="38" font-weight="800" letter-spacing="8">black</text>
+    <text x="226" y="477" font-size="38" font-weight="800" letter-spacing="8">pepper</text>
+    <text x="227" y="531" font-size="34" font-weight="300" letter-spacing="11">salt</text>
   </g>
 </svg>
