@@ -262,10 +262,14 @@ function Expenses({ items, eventId, user, canReview, reload }) {
 
 function Overview({ event, team, canManage, reload }) {
   const emptyDetail = { category: 'Travel', title: '', dateTime: '', location: '', assignedTo: '', description: '' };
+  const emptyTrialRow = { center: '', venue: '', locationUrl: '', dcaRep: '', contactNumber: '', trialDates: '', trialCodes: '', days: '' };
   const [form, setForm] = useState(emptyDetail);
+  const [trialForm, setTrialForm] = useState(emptyTrialRow);
   const [editingDetailId, setEditingDetailId] = useState(null);
+  const [editingTrialId, setEditingTrialId] = useState(null);
   const [saving, setSaving] = useState(false);
   const details = event.overviewDetails || [];
+  const trialDetails = event.trialDetails || [];
 
   function cleanDetails(items) {
     return items.map((item) => ({
@@ -283,6 +287,30 @@ function Overview({ event, team, canManage, reload }) {
     setSaving(true);
     try {
       await api.put(`/events/${event._id}`, { overviewDetails: cleanDetails(nextDetails) });
+      await reload();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function cleanTrialRows(items) {
+    return items.map((item) => ({
+      _id: item._id,
+      center: item.center,
+      venue: item.venue || '',
+      locationUrl: item.locationUrl || '',
+      dcaRep: item.dcaRep || '',
+      contactNumber: item.contactNumber || '',
+      trialDates: item.trialDates || '',
+      trialCodes: item.trialCodes || '',
+      days: item.days || ''
+    }));
+  }
+
+  async function saveTrialRows(nextRows) {
+    setSaving(true);
+    try {
+      await api.put(`/events/${event._id}`, { trialDetails: cleanTrialRows(nextRows) });
       await reload();
     } finally {
       setSaving(false);
@@ -327,6 +355,43 @@ function Overview({ event, team, canManage, reload }) {
   async function removeDetail(detailId) {
     if (String(editingDetailId) === String(detailId)) cancelEdit();
     await saveDetails(details.filter((detail) => String(detail._id) !== String(detailId)));
+  }
+
+  async function submitTrialRow(e) {
+    e.preventDefault();
+    const next = Object.fromEntries(Object.entries(trialForm).map(([key, value]) => [key, String(value || '').trim()]));
+    if (!next.center) return;
+    if (editingTrialId) {
+      await saveTrialRows(trialDetails.map((row) => String(row._id) === String(editingTrialId) ? { ...row, ...next, _id: row._id } : row));
+      setEditingTrialId(null);
+    } else {
+      await saveTrialRows([...trialDetails, next]);
+    }
+    setTrialForm(emptyTrialRow);
+  }
+
+  function editTrialRow(row) {
+    setEditingTrialId(row._id);
+    setTrialForm({
+      center: row.center || '',
+      venue: row.venue || '',
+      locationUrl: row.locationUrl || '',
+      dcaRep: row.dcaRep || '',
+      contactNumber: row.contactNumber || '',
+      trialDates: row.trialDates || '',
+      trialCodes: row.trialCodes || '',
+      days: row.days || ''
+    });
+  }
+
+  function cancelTrialEdit() {
+    setEditingTrialId(null);
+    setTrialForm(emptyTrialRow);
+  }
+
+  async function removeTrialRow(rowId) {
+    if (String(editingTrialId) === String(rowId)) cancelTrialEdit();
+    await saveTrialRows(trialDetails.filter((row) => String(row._id) !== String(rowId)));
   }
 
   return (
@@ -414,6 +479,67 @@ function Overview({ event, team, canManage, reload }) {
             </div>
           ))}
           {details.length === 0 && <p className="text-sm text-slate-500">No extra overview cards yet.</p>}
+        </div>
+      </div>
+      <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:p-4 lg:col-span-3">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="font-semibold">Trial dates venue code initials</h3>
+            <p className="text-sm text-slate-500">Center-wise venue, map, contact, trial dates, codes, and days.</p>
+          </div>
+        </div>
+
+        {canManage && (
+          <form onSubmit={submitTrialRow} className="mt-4 grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 md:grid-cols-4">
+            <input placeholder="Center" value={trialForm.center} onChange={(e) => setTrialForm({ ...trialForm, center: e.target.value })} required />
+            <input placeholder="Venue" value={trialForm.venue} onChange={(e) => setTrialForm({ ...trialForm, venue: e.target.value })} />
+            <input placeholder="Google map / location link" value={trialForm.locationUrl} onChange={(e) => setTrialForm({ ...trialForm, locationUrl: e.target.value })} />
+            <input placeholder="DCA rep" value={trialForm.dcaRep} onChange={(e) => setTrialForm({ ...trialForm, dcaRep: e.target.value })} />
+            <input placeholder="Contact number" value={trialForm.contactNumber} onChange={(e) => setTrialForm({ ...trialForm, contactNumber: e.target.value })} />
+            <input placeholder="Trial dates, e.g. 14 - 15 June" value={trialForm.trialDates} onChange={(e) => setTrialForm({ ...trialForm, trialDates: e.target.value })} />
+            <input placeholder="Trial codes, e.g. GZ-01, GZ-02" value={trialForm.trialCodes} onChange={(e) => setTrialForm({ ...trialForm, trialCodes: e.target.value })} />
+            <input placeholder="Days" value={trialForm.days} onChange={(e) => setTrialForm({ ...trialForm, days: e.target.value })} />
+            <div className="grid grid-cols-2 gap-2 md:col-span-4 md:flex">
+              <button className="primary-btn" disabled={saving}>{saving ? 'Saving...' : editingTrialId ? 'Update row' : 'Add row'}</button>
+              {editingTrialId && <button type="button" onClick={cancelTrialEdit} className="secondary-btn">Cancel</button>}
+            </div>
+          </form>
+        )}
+
+        <div className="mt-4 overflow-hidden rounded-lg border border-slate-200">
+          <div className="overflow-x-auto">
+            <table className="min-w-[980px] w-full border-collapse bg-white text-left text-sm">
+              <thead className="bg-slate-50 text-xs font-bold uppercase tracking-wide text-slate-500">
+                <tr>
+                  <th className="border-b border-slate-200 px-3 py-3">Center</th>
+                  <th className="border-b border-slate-200 px-3 py-3">Venue</th>
+                  <th className="border-b border-slate-200 px-3 py-3">Location</th>
+                  <th className="border-b border-slate-200 px-3 py-3">DCA Rep</th>
+                  <th className="border-b border-slate-200 px-3 py-3">Contact Number</th>
+                  <th className="border-b border-slate-200 px-3 py-3">Trial Dates</th>
+                  <th className="border-b border-slate-200 px-3 py-3">Trial Codes</th>
+                  <th className="border-b border-slate-200 px-3 py-3">Days</th>
+                  {canManage && <th className="border-b border-slate-200 px-3 py-3 text-right">Action</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {trialDetails.map((row) => (
+                  <tr key={row._id} className="align-top odd:bg-white even:bg-slate-50/40">
+                    <td className="border-b border-slate-100 px-3 py-3 font-semibold text-slate-950">{row.center}</td>
+                    <td className="border-b border-slate-100 px-3 py-3 text-slate-700">{row.venue || '-'}</td>
+                    <td className="border-b border-slate-100 px-3 py-3">{row.locationUrl ? <a href={row.locationUrl} target="_blank" rel="noreferrer" className="break-all text-brand hover:underline">Open map</a> : <span className="text-slate-400">-</span>}</td>
+                    <td className="border-b border-slate-100 px-3 py-3 text-slate-700">{row.dcaRep || '-'}</td>
+                    <td className="border-b border-slate-100 px-3 py-3 text-slate-700">{row.contactNumber || '-'}</td>
+                    <td className="border-b border-slate-100 px-3 py-3 text-slate-700">{row.trialDates || '-'}</td>
+                    <td className="border-b border-slate-100 px-3 py-3 text-slate-700">{row.trialCodes || '-'}</td>
+                    <td className="border-b border-slate-100 px-3 py-3 text-center font-bold text-slate-950">{row.days || '-'}</td>
+                    {canManage && <td className="border-b border-slate-100 px-3 py-3"><div className="flex justify-end gap-1"><button onClick={() => editTrialRow(row)} className="rounded-lg p-2 text-slate-600 hover:bg-slate-100" title="Edit row"><PenLine size={16} /></button><button onClick={() => removeTrialRow(row._id)} className="rounded-lg p-2 text-rose-600 hover:bg-rose-50" title="Delete row"><Trash2 size={16} /></button></div></td>}
+                  </tr>
+                ))}
+                {trialDetails.length === 0 && <tr><td colSpan={canManage ? 9 : 8} className="px-3 py-6 text-center text-sm text-slate-500">No trial detail rows added yet.</td></tr>}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

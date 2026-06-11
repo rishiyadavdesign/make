@@ -43,6 +43,9 @@ export const updateEvent = asyncHandler(async (req, res) => {
   if (!isBoss(req.user) && String(event.assignedManager) !== String(req.user._id)) {
     return res.status(403).json({ message: 'Forbidden' });
   }
+  if (!isBoss(req.user) && ('overviewDetails' in req.body || 'trialDetails' in req.body)) {
+    return res.status(403).json({ message: 'Only Boss/Admin can update overview cards and trial details' });
+  }
   const previousAssignedIds = assignedUserIds(event);
   Object.assign(event, req.body);
   await event.save();

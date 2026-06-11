@@ -25,6 +25,18 @@ const eventSchema = new mongoose.Schema(
         assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         description: { type: String, default: '' }
       }
+    ],
+    trialDetails: [
+      {
+        center: { type: String, required: true, trim: true },
+        venue: { type: String, default: '' },
+        locationUrl: { type: String, default: '' },
+        dcaRep: { type: String, default: '' },
+        contactNumber: { type: String, default: '' },
+        trialDates: { type: String, default: '' },
+        trialCodes: { type: String, default: '' },
+        days: { type: String, default: '' }
+      }
     ]
   },
   { timestamps: true }
