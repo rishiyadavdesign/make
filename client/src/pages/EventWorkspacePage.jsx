@@ -153,7 +153,7 @@ export default function EventWorkspacePage() {
       </div>
 
       {editingEvent && <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"><EventForm users={isBoss(user) ? allUsers : team} initial={{ ...event, assignedManager: event.assignedManager?._id || '', teamMembers: (event.teamMembers || []).map((u) => u._id) }} onSubmit={saveEvent} /></div>}
-      {tab === 'overview' && <Overview event={event} team={team} canManage={canManage} reload={load} />}
+      {tab === 'overview' && <Overview event={event} team={team} canManage={isBoss(user)} reload={load} />}
       {tab === 'tasks' && <Tasks tasks={data.tasks} team={eventMembers} user={user} canManage={canManage} eventId={id} create={create('tasks')} update={update('tasks')} remove={remove('tasks')} onManageTeam={() => setEditingEvent(true)} />}
       {tab === 'equipment' && <Equipment items={data.equipment} team={eventMembers} canManage={canManage} eventId={id} create={create('equipment')} update={update('equipment')} remove={remove('equipment')} onManageTeam={() => setEditingEvent(true)} />}
       {tab === 'responsibilities' && <SimpleManager title="Responsibilities" resource="responsibilities" items={data.responsibilities} team={eventMembers} eventId={id} canManage={canManage} reload={load} onManageTeam={() => setEditingEvent(true)} />}
