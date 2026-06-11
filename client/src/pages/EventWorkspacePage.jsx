@@ -1,4 +1,4 @@
-import { CheckSquare, ClipboardList, FileUp, IndianRupee, Info, NotebookText, Pin, ShieldCheck, Trash2, Wrench } from 'lucide-react';
+import { CheckSquare, ClipboardList, FileUp, IndianRupee, Info, NotebookText, PenLine, Pin, ShieldCheck, Trash2, Wrench } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api/client.js';
@@ -263,6 +263,7 @@ function Expenses({ items, eventId, user, canReview, reload }) {
 function Overview({ event, team, canManage, reload }) {
   const emptyDetail = { category: 'Travel', title: '', dateTime: '', location: '', assignedTo: '', description: '' };
   const [form, setForm] = useState(emptyDetail);
+  const [editingDetailId, setEditingDetailId] = useState(null);
   const [saving, setSaving] = useState(false);
   const details = event.overviewDetails || [];
 
@@ -288,7 +289,7 @@ function Overview({ event, team, canManage, reload }) {
     }
   }
 
-  async function addDetail(e) {
+  async function submitDetail(e) {
     e.preventDefault();
     const next = {
       ...form,
@@ -297,11 +298,34 @@ function Overview({ event, team, canManage, reload }) {
       description: form.description.trim()
     };
     if (!next.title) return;
-    await saveDetails([...details, next]);
+    if (editingDetailId) {
+      await saveDetails(details.map((detail) => String(detail._id) === String(editingDetailId) ? { ...detail, ...next, _id: detail._id } : detail));
+      setEditingDetailId(null);
+    } else {
+      await saveDetails([...details, next]);
+    }
+    setForm(emptyDetail);
+  }
+
+  function editDetail(detail) {
+    setEditingDetailId(detail._id);
+    setForm({
+      category: detail.category || 'Travel',
+      title: detail.title || '',
+      dateTime: detail.dateTime || '',
+      location: detail.location || '',
+      assignedTo: detail.assignedTo?._id || detail.assignedTo || '',
+      description: detail.description || ''
+    });
+  }
+
+  function cancelEdit() {
+    setEditingDetailId(null);
     setForm(emptyDetail);
   }
 
   async function removeDetail(detailId) {
+    if (String(editingDetailId) === String(detailId)) cancelEdit();
     await saveDetails(details.filter((detail) => String(detail._id) !== String(detailId)));
   }
 
@@ -347,7 +371,7 @@ function Overview({ event, team, canManage, reload }) {
         </div>
 
         {canManage && (
-          <form onSubmit={addDetail} className="mt-4 grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 md:grid-cols-3">
+          <form onSubmit={submitDetail} className="mt-4 grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 md:grid-cols-3">
             <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
               {['Travel', 'Hotel', 'Reporting', 'Vendor', 'Contact', 'Parking', 'Other'].map((item) => <option key={item}>{item}</option>)}
             </select>
@@ -359,7 +383,10 @@ function Overview({ event, team, canManage, reload }) {
               {team.map((person) => <option key={person._id} value={person._id}>{person.fullName}</option>)}
             </select>
             <textarea className="md:col-span-2" placeholder="Details / instructions" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-            <button className="primary-btn md:self-start" disabled={saving}>{saving ? 'Saving...' : 'Add card'}</button>
+            <div className="grid grid-cols-2 gap-2 md:flex md:self-start">
+              <button className="primary-btn" disabled={saving}>{saving ? 'Saving...' : editingDetailId ? 'Update card' : 'Add card'}</button>
+              {editingDetailId && <button type="button" onClick={cancelEdit} className="secondary-btn">Cancel</button>}
+            </div>
           </form>
         )}
 
@@ -371,7 +398,12 @@ function Overview({ event, team, canManage, reload }) {
                   <span className="inline-flex rounded-full bg-green-50 px-2.5 py-1 text-xs font-semibold text-brand">{detail.category}</span>
                   <h4 className="mt-2 break-words font-semibold text-slate-950">{detail.title}</h4>
                 </div>
-                {canManage && <button onClick={() => removeDetail(detail._id)} className="shrink-0 rounded-lg p-2 text-rose-600 hover:bg-rose-50" title="Remove card"><Trash2 size={16} /></button>}
+                {canManage && (
+                  <div className="flex shrink-0 items-center gap-1">
+                    <button onClick={() => editDetail(detail)} className="rounded-lg p-2 text-slate-600 hover:bg-slate-50" title="Edit card"><PenLine size={16} /></button>
+                    <button onClick={() => removeDetail(detail._id)} className="rounded-lg p-2 text-rose-600 hover:bg-rose-50" title="Remove card"><Trash2 size={16} /></button>
+                  </div>
+                )}
               </div>
               <dl className="mt-3 space-y-2 text-sm">
                 {detail.dateTime && <InfoRow label="Time" value={detail.dateTime} />}
