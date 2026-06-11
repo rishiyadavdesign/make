@@ -124,8 +124,8 @@ export default function EventWorkspacePage() {
 
   if (!event) return <div className="text-sm text-slate-500">Loading event workspace...</div>;
   return (
-    <div className="space-y-3 pb-4 sm:space-y-5">
-      <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
+    <div className="min-w-0 space-y-3 overflow-x-hidden pb-4 sm:space-y-5">
+      <div className="min-w-0 rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <h2 className="break-words text-[1.35rem] font-bold leading-tight text-slate-950 sm:text-2xl">{event.eventName}</h2>
@@ -143,9 +143,9 @@ export default function EventWorkspacePage() {
             </div>
           </div>
         </div>
-        <div className="hide-scrollbar -mx-3 mt-4 flex snap-x gap-2 overflow-x-auto px-3 pb-1 sm:mx-0 sm:px-0">
+        <div className="hide-scrollbar -mx-3 mt-4 flex max-w-full snap-x gap-2 overflow-x-auto px-3 pb-1 sm:mx-0 sm:px-0">
           {tabs.map(([key, label, Icon]) => (
-            <button key={key} onClick={() => setTab(key)} className={`flex min-h-10 min-w-[6.6rem] shrink-0 snap-start items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold ${tab === key ? 'bg-green-50 text-brand' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
+            <button key={key} onClick={() => setTab(key)} className={`flex min-h-10 min-w-[6.2rem] shrink-0 snap-start items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold ${tab === key ? 'bg-green-50 text-brand' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
               <Icon size={16} /> {label}
             </button>
           ))}
@@ -395,8 +395,8 @@ function Overview({ event, team, canManage, reload }) {
   }
 
   return (
-    <div className="grid gap-3 lg:grid-cols-3">
-      <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:p-4 lg:col-span-2">
+    <div className="grid min-w-0 gap-3 lg:grid-cols-3">
+      <div className="min-w-0 rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:p-4 lg:col-span-2">
         <h3 className="font-semibold">Event details</h3>
         <p className="mt-3 text-sm text-slate-600">{event.description}</p>
         <dl className="mt-4 grid gap-3 text-sm md:grid-cols-2">
@@ -406,7 +406,7 @@ function Overview({ event, team, canManage, reload }) {
           <InfoRow label="Instructions" value={event.importantInstructions || 'No instructions'} />
         </dl>
       </div>
-      <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
+      <div className="min-w-0 rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
         <h3 className="font-semibold">Team</h3>
         <div className="mt-3 space-y-3">
           {event.assignedManager && (
@@ -427,7 +427,7 @@ function Overview({ event, team, canManage, reload }) {
           </div>
         </div>
       </div>
-      <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:p-4 lg:col-span-3">
+      <div className="min-w-0 rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:p-4 lg:col-span-3">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="font-semibold">Overview cards</h3>
@@ -455,7 +455,7 @@ function Overview({ event, team, canManage, reload }) {
           </form>
         )}
 
-        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-4 grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-3">
           {details.map((detail) => (
             <div key={detail._id} className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
               <div className="flex items-start justify-between gap-3">
@@ -481,7 +481,7 @@ function Overview({ event, team, canManage, reload }) {
           {details.length === 0 && <p className="text-sm text-slate-500">No extra overview cards yet.</p>}
         </div>
       </div>
-      <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:p-4 lg:col-span-3">
+      <div className="min-w-0 rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:p-4 lg:col-span-3">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="font-semibold">Trial dates venue code initials</h3>
@@ -506,8 +506,31 @@ function Overview({ event, team, canManage, reload }) {
           </form>
         )}
 
-        <div className="mt-4 overflow-hidden rounded-lg border border-slate-200">
-          <div className="overflow-x-auto">
+        <div className="mt-4 space-y-3 md:hidden">
+          {trialDetails.map((row) => (
+            <div key={row._id} className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="break-words text-base font-bold text-slate-950">{row.center}</p>
+                  <p className="mt-1 break-words text-sm text-slate-600">{row.venue || 'Venue not set'}</p>
+                </div>
+                {canManage && <div className="flex shrink-0 gap-1"><button onClick={() => editTrialRow(row)} className="rounded-lg p-2 text-slate-600 hover:bg-slate-100" title="Edit row"><PenLine size={16} /></button><button onClick={() => removeTrialRow(row._id)} className="rounded-lg p-2 text-rose-600 hover:bg-rose-50" title="Delete row"><Trash2 size={16} /></button></div>}
+              </div>
+              <dl className="mt-3 grid gap-2 text-sm">
+                {row.locationUrl && <InfoRow label="Location" value={<a href={row.locationUrl} target="_blank" rel="noreferrer" className="break-all text-brand hover:underline">Open map</a>} />}
+                <InfoRow label="DCA Rep" value={row.dcaRep || '-'} />
+                <InfoRow label="Contact Number" value={row.contactNumber || '-'} />
+                <InfoRow label="Trial Dates" value={row.trialDates || '-'} />
+                <InfoRow label="Trial Codes" value={row.trialCodes || '-'} />
+                <InfoRow label="Days" value={row.days || '-'} />
+              </dl>
+            </div>
+          ))}
+          {trialDetails.length === 0 && <p className="rounded-xl border border-dashed border-slate-200 p-4 text-center text-sm text-slate-500">No trial detail rows added yet.</p>}
+        </div>
+
+        <div className="mt-4 hidden min-w-0 overflow-hidden rounded-lg border border-slate-200 md:block">
+          <div className="max-w-full overflow-x-auto">
             <table className="min-w-[980px] w-full border-collapse bg-white text-left text-sm">
               <thead className="bg-slate-50 text-xs font-bold uppercase tracking-wide text-slate-500">
                 <tr>
